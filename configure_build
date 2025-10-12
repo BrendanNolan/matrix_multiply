@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=clang-toolchain.cmake

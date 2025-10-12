@@ -1,5 +1,7 @@
 #include <cassert>
+#include <format>
 #include <iostream>
+#include <string>
 #include <vector>
 
 using MatrixImpl = std::vector<std::vector<float>>;
@@ -9,6 +11,9 @@ struct Dimension {
     size_t j = 0U;
     bool operator==(const Dimension& other) const = default;
 };
+std::string display(const Dimension& dim) {
+    return std::format("({}, {})", dim.i, dim.j);
+}
 
 Dimension dimension(const MatrixImpl& matrix) {
     if (matrix.empty())
@@ -51,5 +56,5 @@ int main() {
     const auto a = Matrix{Dimension{5, 5}};
     const auto b = Matrix{Dimension{5, 5}};
     const auto c = multiply(a, b, TileSpec{1U, 1U, 1U});
-    std::cout << c.dim().i << "," << c.dim().j << std::endl;
+    std::cout << display(c.dim()) << std::endl;
 }

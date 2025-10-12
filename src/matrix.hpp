@@ -1,6 +1,6 @@
+#pragma once
+
 #include <cassert>
-#include <format>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -11,16 +11,8 @@ struct Dimension {
     size_t j = 0U;
     bool operator==(const Dimension& other) const = default;
 };
-std::string display(const Dimension& dim) {
-    return std::format("({}, {})", dim.i, dim.j);
-}
-
-Dimension dimension(const MatrixImpl& matrix) {
-    if (matrix.empty())
-        return Dimension{ 0U, 0U };
-    assert(!matrix.front().empty());
-    return Dimension{ matrix.size(), matrix.front().size() };
-}
+std::string display(const Dimension& dim);
+Dimension dimension(const MatrixImpl& matrix);
 
 class Matrix {
 public:
@@ -46,15 +38,4 @@ struct TileSpec {
     size_t k = 0U;
 };
 
-Matrix multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec) {
-    assert(a.dim() == b.dim());
-    auto c = Matrix(Dimension{a.dim().i, b.dim().j});
-    return c;
-}
-
-int main() {
-    const auto a = Matrix{Dimension{5, 5}};
-    const auto b = Matrix{Dimension{5, 5}};
-    const auto c = multiply(a, b, TileSpec{1U, 1U, 1U});
-    std::cout << display(c.dim()) << std::endl;
-}
+Matrix multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec);

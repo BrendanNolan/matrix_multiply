@@ -1,3 +1,18 @@
 #!/usr/bin/env bash
 
-cmake --build build
+set -euo pipefail
+
+bail() {
+    echo "Usage run_build [cpu_count]" >&2
+    exit 1
+}
+
+num_cpus=1
+if [[ $# -eq 1 ]]; then
+    num_cpus="${1}"
+fi
+if [[ $# -ge 2 ]]; then
+    bail
+fi
+
+cmake --build build -- "-j${num_cpus}"

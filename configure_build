@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
+bail() {
+    echo "Usage: configure_build <build_type(Release or Debug)>" >&2
+    exit 1
+}
+
+build_type=Debug
+if [[ $# -eq 1 ]]; then
+    build_type="${1}"
+fi
+if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
+    bail
+fi
+
 conan install . --output-folder build --build=missing
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=clang-toolchain.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=clang-toolchain.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_BUILD_TYPE="${build_type}"

@@ -6,6 +6,10 @@ std::string display(const Dimension& dim) {
     return "(" + std::to_string(dim.i) + ", " + std::to_string(dim.j) + ")";
 }
 
+bool Dimension::operator==(const Dimension& other) const {
+    return this->i == other.i && this->j == other.j;
+}
+
 Dimension dimension(const MatrixImpl& matrix) {
     if (matrix.empty())
         return Dimension{ 0U, 0U };

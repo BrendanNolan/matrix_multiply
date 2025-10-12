@@ -11,7 +11,7 @@ using MatrixImpl = std::vector<std::vector<float>>;
 struct Dimension {
     size_t i = 0U;
     size_t j = 0U;
-    bool operator==(const Dimension& other) const = default;
+    bool operator==(const Dimension& other) const;
 };
 std::string display(const Dimension& dim);
 Dimension dimension(const MatrixImpl& matrix);

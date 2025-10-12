@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace lin_alg {
+
 using MatrixImpl = std::vector<std::vector<float>>;
 
 struct Dimension {
@@ -15,9 +17,10 @@ std::string display(const Dimension& dim);
 Dimension dimension(const MatrixImpl& matrix);
 
 class Matrix {
-public:
+ public:
     Matrix(const MatrixImpl& impl)
-        : impl_{impl} {}
+        : impl_{ impl } {
+    }
     Matrix(const Dimension& dim) {
         const auto row = std::vector<float>(dim.j, 0.0f);
         impl_ = std::vector<std::vector<float>>(dim.i, row);
@@ -25,7 +28,8 @@ public:
     Dimension dim() const {
         return dimension(impl_);
     }
-private:
+
+ private:
     MatrixImpl impl_;
 };
 
@@ -38,4 +42,7 @@ struct TileSpec {
     size_t k = 0U;
 };
 
-Matrix multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec);
+Matrix naive_multiply(const Matrix& a, const Matrix& b);
+Matrix tiled_multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec);
+
+}// namespace lin_alg

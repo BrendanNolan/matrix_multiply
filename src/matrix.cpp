@@ -1,11 +1,9 @@
 #include "matrix.hpp"
 
-#include <format>
-
 namespace lin_alg {
 
 std::string display(const Dimension& dim) {
-    return std::format("({}, {})", dim.i, dim.j);
+    return "(" + std::to_string(dim.i) + ", " + std::to_string(dim.j) + ")";
 }
 
 Dimension dimension(const MatrixImpl& matrix) {

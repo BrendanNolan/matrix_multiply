@@ -29,8 +29,14 @@ enable_testing()
 
 # Add test executable
 file(GLOB TEST_SOURCES "tests/*.cpp")
+
 add_executable(matrix_multiply_tests ${TEST_SOURCES})
-target_link_libraries(matrix_multiply_tests PRIVATE matrix_multiply_lib gtest::gtest gtest::gtest_main)
+target_link_libraries(matrix_multiply_tests
+    PRIVATE
+        matrix_multiply_lib
+        GTest::GTest
+        GTest::Main
+)
 target_include_directories(matrix_multiply_tests PRIVATE src)
 
 # Register tests with CTest

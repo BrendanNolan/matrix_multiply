@@ -7,6 +7,8 @@ bail() {
     exit 1
 }
 
+mkdir -p build
+
 build_type=Debug
 if [[ $# -eq 1 ]]; then
     build_type="${1}"
@@ -16,5 +18,9 @@ if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
 fi
 
 conan install . --output-folder build --build=missing
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=clang-toolchain.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+cmake -S . -B build \
+    -DCMAKE_TOOLCHAIN_FILE=clang-toolchain.cmake \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_CXX_FLAGS="-isysroot $(xcrun --show-sdk-path)" \
+    -DCMAKE_C_FLAGS="-isysroot $(xcrun --show-sdk-path)" \
     -DCMAKE_BUILD_TYPE="${build_type}"

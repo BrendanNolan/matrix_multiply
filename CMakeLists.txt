@@ -5,10 +5,21 @@ set(CMAKE_CXX_STANDARD 20)
 # Include Conan-generated toolchain
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 
-# Source files
-file(GLOB SOURCES "src/*.cpp")
-add_executable(matrix_multiply ${SOURCES})
-target_include_directories(matrix_multiply PRIVATE src)
+# Gather source files
+file(GLOB SOURCES "src/*.cpp" "src/*.cc" "src/*.cu")
+file(GLOB HEADER_FILES "src/*.h" "src/*.hpp" "src/*.cuh")
+
+# Split sources into library and main executable
+# Assume main.cpp contains main() and the rest is library code
+list(FILTER SOURCES EXCLUDE REGEX ".*main\\.cpp$")
+
+# Create library for reusable code
+add_library(matrix_multiply_lib ${SOURCES} ${HEADER_FILES})
+target_include_directories(matrix_multiply_lib PUBLIC src)
+
+# Main executable links to the library
+add_executable(matrix_multiply src/main.cpp)
+target_link_libraries(matrix_multiply PRIVATE matrix_multiply_lib)
 
 # Enable testing
 enable_testing()
@@ -16,7 +27,7 @@ enable_testing()
 # Add test executable
 file(GLOB TEST_SOURCES "tests/*.cpp")
 add_executable(matrix_multiply_tests ${TEST_SOURCES})
-target_link_libraries(matrix_multiply_tests PRIVATE CONAN_PKG::gtest CONAN_PKG::gtest_main matrix_multiply)
+target_link_libraries(matrix_multiply_tests PRIVATE matrix_multiply_lib gtest::gtest gtest::gtest_main)
 target_include_directories(matrix_multiply_tests PRIVATE src)
 
 # Register tests with CTest

@@ -26,6 +26,8 @@ Matrix naive_multiply(const Matrix& a, const Matrix& b) {
 Matrix tiled_multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec) {
     assert(a.dim() == b.dim());
     auto c = Matrix(Dimension{ a.dim().i, b.dim().j });
+    if (tile_spec.i == 0U)
+        display(c.dim());
     return c;
 }
 

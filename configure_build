@@ -19,8 +19,5 @@ fi
 
 conan install . --output-folder build --build=missing
 cmake -S . -B build \
-    -DCMAKE_TOOLCHAIN_FILE=clang-toolchain.cmake \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DCMAKE_C_FLAGS="--sysroot=$(xcrun --show-sdk-path)" \
-    -DCMAKE_CXX_FLAGS="--sysroot=$(xcrun --show-sdk-path)" \
     -DCMAKE_BUILD_TYPE="${build_type}"

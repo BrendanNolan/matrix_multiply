@@ -20,4 +20,6 @@ fi
 conan install . --output-folder build --build=missing
 cmake -S . -B build \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+    -DCMAKE_OSX_SYSROOT="$(xcrun --show-sdk-path)" \
     -DCMAKE_BUILD_TYPE="${build_type}"

@@ -1,5 +1,7 @@
 #include "matrix.hpp"
 
+#include <random>
+
 namespace lin_alg {
 
 std::string display(const Dimension& dim) {
@@ -24,6 +26,18 @@ Matrix::Matrix(const MatrixImpl& impl)
 Matrix::Matrix(const Dimension& dim) {
     const auto row = std::vector<float>(dim.j, 0.0f);
     impl_ = std::vector<std::vector<float>>(dim.i, row);
+}
+
+Matrix Matrix::random(const Dimension& dim) {
+    std::mt19937 gen(147);
+    std::uniform_int_distribution<> dist(0, 100);
+    auto matrix = Matrix{ dim };
+    for (auto i = 0U; i < dim.i; ++i) {
+        for (auto j = 0U; j < dim.j; ++j) {
+            matrix[i][j] = dist(gen);
+        }
+    }
+    return matrix;
 }
 
 Dimension Matrix::dim() const {

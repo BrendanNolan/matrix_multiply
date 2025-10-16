@@ -20,6 +20,7 @@ class Matrix {
  public:
     Matrix(const MatrixImpl& impl);
     Matrix(const Dimension& dim);
+    static Matrix random(const Dimension& dim);
     Dimension dim() const;
     std::vector<float>& operator[](size_t index);
     const std::vector<float>& operator[](size_t index) const;

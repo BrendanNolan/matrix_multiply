@@ -63,6 +63,24 @@ bool Matrix::operator==(const Matrix& other) const {
     return true;
 }
 
+MatrixImpl Matrix::raw() const {
+    return impl_;
+}
+
+std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
+    if (matrix.dim().i == 0U || matrix.dim().j == 0U) {
+        os << std::endl;
+        return os;
+    }
+    for (const auto& row : matrix.raw()) {
+        for (const auto entry : row) {
+            os << entry << ' ';
+        }
+        os << std::endl;
+    }
+    return os;
+}
+
 bool admits_tile(const Matrix& matrix, size_t tile_size) {
     const auto dim = matrix.dim();
     return tile_size <= dim.i && tile_size <= dim.j;

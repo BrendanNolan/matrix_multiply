@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-find . \
-  -type d \( -name build -o -name .git -o -name venv \) -prune -false -o \
-  -type f \( -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.cuh" -o -iname "*.cu" -o -iname "*.h" -o -iname "*.cc" \) \
-  | xargs -I{} clang-format -i {}
-

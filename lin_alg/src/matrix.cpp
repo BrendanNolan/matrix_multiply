@@ -1,5 +1,6 @@
 #include "matrix.hpp"
 
+#include <algorithm>
 #include <random>
 
 namespace lin_alg {
@@ -111,9 +112,9 @@ Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) 
         for (auto j = 0U; j < N; j += S) {
             // top left of current C block is at (i,j)
             for (auto k = 0U; k < K; k += S) {
-                for (auto ii = i; ii < i + S; ++ii) {
-                    for (auto jj = j; jj < j + S; ++jj) {
-                        for (auto kk = k; kk < k + S; ++kk) {
+                for (auto ii = i; ii < std::min(i + S, M); ++ii) {
+                    for (auto jj = j; jj < std::min(j + S, N); ++jj) {
+                        for (auto kk = k; kk < std::min(k + S, K); ++kk) {
                             C[ii][jj] += a[ii][kk] * b[kk][jj];
                         }
                     }

@@ -23,10 +23,10 @@ Matrix naive_multiply(const Matrix& a, const Matrix& b) {
     return c;
 }
 
-Matrix tiled_multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec) {
+Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) {
     assert(a.dim() == b.dim());
     auto c = Matrix(Dimension{ a.dim().i, b.dim().j });
-    if (tile_spec.i == 0U)
+    if (tile_size == 0U)
         display(c.dim());
     return c;
 }

@@ -33,16 +33,7 @@ class Matrix {
     MatrixImpl impl_;
 };
 
-// i is the row count of the LHS tiles
-// j is the column count of the RHS tiles
-// k is the column count of the LHS tiles (and necessarily the row count of the RHS tiles)
-struct TileSpec {
-    size_t i = 0U;
-    size_t j = 0U;
-    size_t k = 0U;
-};
-
 Matrix naive_multiply(const Matrix& a, const Matrix& b);
-Matrix tiled_multiply(const Matrix& a, const Matrix& b, const TileSpec& tile_spec);
+Matrix tiled_multiply(const Matrix& a, const Matrix& b, size_t tile_size);
 
 }// namespace lin_alg

@@ -110,15 +110,15 @@ Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) 
     const auto M = a.dim().i;
     const auto N = b.dim().j;
     const auto K = a.dim().j;
-    const auto S = tile_size;
+    const auto T = tile_size;
     auto C = Matrix::zeroes(Dimension{ a.dim().i, b.dim().j });
-    for (auto i = 0U; i < M; i += S) {
-        for (auto j = 0U; j < N; j += S) {
+    for (auto i = 0U; i < M; i += T) {
+        for (auto j = 0U; j < N; j += T) {
             // top left of current C block is at (i,j)
-            for (auto k = 0U; k < K; k += S) {
-                for (auto ii = i; ii < std::min(i + S, M); ++ii) {
-                    for (auto jj = j; jj < std::min(j + S, N); ++jj) {
-                        for (auto kk = k; kk < std::min(k + S, K); ++kk) {
+            for (auto k = 0U; k < K; k += T) {
+                for (auto ii = i; ii < std::min(i + T, M); ++ii) {
+                    for (auto jj = j; jj < std::min(j + T, N); ++jj) {
+                        for (auto kk = k; kk < std::min(k + T, K); ++kk) {
                             C[ii][jj] += a[ii][kk] * b[kk][jj];
                         }
                     }

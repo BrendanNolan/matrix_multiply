@@ -17,18 +17,61 @@ Dimension dimension(const MatrixImpl& matrix) {
     return Dimension{ matrix.size(), matrix.front().size() };
 }
 
+Matrix::Matrix(const MatrixImpl& impl)
+    : impl_{ impl } {
+}
+
+Matrix::Matrix(const Dimension& dim) {
+    const auto row = std::vector<float>(dim.j, 0.0f);
+    impl_ = std::vector<std::vector<float>>(dim.i, row);
+}
+
+Dimension Matrix::dim() const {
+    return dimension(impl_);
+}
+
+std::vector<float>& Matrix::operator[](size_t index) {
+    return impl_.at(index);
+}
+
+const std::vector<float>& Matrix::operator[](size_t index) const {
+    return impl_.at(index);
+}
+
+bool admits_tile(const Matrix& matrix, size_t tile_size) {
+    const auto dim = matrix.dim();
+    return tile_size <= dim.i && tile_size <= dim.j;
+}
+
 Matrix naive_multiply(const Matrix& a, const Matrix& b) {
-    assert(a.dim() == b.dim());
+    assert(a.dim().j == b.dim().i);
     auto c = Matrix(Dimension{ a.dim().i, b.dim().j });
     return c;
 }
 
 Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) {
-    assert(a.dim() == b.dim());
-    auto c = Matrix(Dimension{ a.dim().i, b.dim().j });
-    if (tile_size == 0U)
-        display(c.dim());
-    return c;
+    assert(a.dim().j == b.dim().i);
+    assert(admits_tile(a, tile_size) && admits_tile(b, tile_size) && tile_size > 0U);
+    const auto M = a.dim().i;
+    const auto N = b.dim().j;
+    const auto K = a.dim().j;
+    const auto S = tile_size;
+    auto C = Matrix(Dimension{ a.dim().i, b.dim().j });
+    for (auto i = 0U; i < M; i += S) {
+        for (auto j = 0U; j < N; j += S) {
+            // top left of current C block is at (i,j)
+            for (auto k = 0U; k < K; k += S) {
+                for (auto ii = i; ii < i + S; ++ii) {
+                    for (auto jj = j; jj < j + S; ++jj) {
+                        for (auto kk = k; kk < k + S; ++kk) {
+                            C[ii][jj] += a[ii][kk] * b[kk][jj];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return C;
 }
 
 }// namespace lin_alg

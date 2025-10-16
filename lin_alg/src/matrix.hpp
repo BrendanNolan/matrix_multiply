@@ -18,21 +18,17 @@ Dimension dimension(const MatrixImpl& matrix);
 
 class Matrix {
  public:
-    Matrix(const MatrixImpl& impl)
-        : impl_{ impl } {
-    }
-    Matrix(const Dimension& dim) {
-        const auto row = std::vector<float>(dim.j, 0.0f);
-        impl_ = std::vector<std::vector<float>>(dim.i, row);
-    }
-    Dimension dim() const {
-        return dimension(impl_);
-    }
+    Matrix(const MatrixImpl& impl);
+    Matrix(const Dimension& dim);
+    Dimension dim() const;
+    std::vector<float>& operator[](size_t index);
+    const std::vector<float>& operator[](size_t index) const;
 
  private:
     MatrixImpl impl_;
 };
 
+bool admits_tile(const Matrix& matrix, size_t tile_size);
 Matrix naive_multiply(const Matrix& a, const Matrix& b);
 Matrix tiled_multiply(const Matrix& a, const Matrix& b, size_t tile_size);
 

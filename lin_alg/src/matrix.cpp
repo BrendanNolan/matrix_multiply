@@ -16,18 +16,18 @@ bool Dimension::operator==(const Dimension& other) const {
 
 Dimension dimension(const MatrixImpl& matrix) {
     if (matrix.empty())
-        return Dimension{ 0U, 0U };
+        return Dimension{0U, 0U};
     assert(!matrix.front().empty());
-    return Dimension{ matrix.size(), matrix.front().size() };
+    return Dimension{matrix.size(), matrix.front().size()};
 }
 
 Matrix::Matrix(const MatrixImpl& impl)
-    : impl_{ impl } {
+    : impl_{impl} {
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
     const auto row = std::vector<float>(dim.j, 0.0f);
-    return Matrix{ MatrixImpl{ dim.i, row } };
+    return Matrix{MatrixImpl{dim.i, row}};
 }
 
 Matrix Matrix::random(const Dimension& dim) {
@@ -93,7 +93,7 @@ bool admits_tile(const Matrix& matrix, size_t tile_size) {
 
 Matrix naive_multiply(const Matrix& a, const Matrix& b) {
     assert(a.dim().j == b.dim().i);
-    auto c = Matrix::zeroes(Dimension{ a.dim().i, b.dim().j });
+    auto c = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
             for (auto k = 0U; k < a.dim().j; ++k) {
@@ -111,7 +111,7 @@ Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) 
     const auto N = b.dim().j;
     const auto K = a.dim().j;
     const auto T = tile_size;
-    auto C = Matrix::zeroes(Dimension{ a.dim().i, b.dim().j });
+    auto C = Matrix::zeroes(Dimension{a.dim().i, b.dim().j});
     for (auto i = 0U; i < M; i += T) {
         for (auto j = 0U; j < N; j += T) {
             // top left of current C block is at (i,j)

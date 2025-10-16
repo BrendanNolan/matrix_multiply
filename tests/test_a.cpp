@@ -17,8 +17,8 @@ TEST(FirstTest, MultiplyDim) {
         }
         return result;
     };
-    const auto a = lin_alg::Matrix::random(Dim{ pow2(11U), pow2(10U) });
-    const auto b = lin_alg::Matrix::random(Dim{ pow2(10U), pow2(12U) });
+    const auto a = lin_alg::Matrix::random(Dim{pow2(11U), pow2(10U)});
+    const auto b = lin_alg::Matrix::random(Dim{pow2(10U), pow2(12U)});
     auto start = std::chrono::high_resolution_clock::now();
     auto tiled_multiply_result = lin_alg::tiled_multiply(a, b, 4U);
     auto end = std::chrono::high_resolution_clock::now();

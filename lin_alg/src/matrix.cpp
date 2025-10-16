@@ -89,6 +89,13 @@ bool admits_tile(const Matrix& matrix, size_t tile_size) {
 Matrix naive_multiply(const Matrix& a, const Matrix& b) {
     assert(a.dim().j == b.dim().i);
     auto c = Matrix(Dimension{ a.dim().i, b.dim().j });
+    for (auto i = 0U; i < a.dim().i; ++i) {
+        for (auto j = 0U; j < b.dim().j; ++j) {
+            for (auto k = 0U; k < a.dim().j; ++k) {
+                c[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
     return c;
 }
 

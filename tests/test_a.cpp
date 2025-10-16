@@ -1,14 +1,24 @@
 #include "matrix.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <iostream>
 
 #include <gtest/gtest.h>
 
+using Dim = lin_alg::Dimension;
+
 TEST(FirstTest, MultiplyDim) {
-    const auto dim = lin_alg::Dimension{ 2048U, 2048U };
-    const auto a = lin_alg::Matrix::random(dim);
-    const auto b = lin_alg::Matrix::random(dim);
+    auto pow2 = [](size_t x) {
+        auto result = 1U;
+        while (x != 0U) {
+            result *= 2U;
+            --x;
+        }
+        return result;
+    };
+    const auto a = lin_alg::Matrix::random(Dim{ pow2(11U), pow2(10U) });
+    const auto b = lin_alg::Matrix::random(Dim{ pow2(10U), pow2(12U) });
     auto start = std::chrono::high_resolution_clock::now();
     auto tiled_multiply_result = lin_alg::tiled_multiply(a, b, 4U);
     auto end = std::chrono::high_resolution_clock::now();

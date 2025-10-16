@@ -23,7 +23,7 @@ class Matrix {
     Dimension dim() const;
     std::vector<float>& operator[](size_t index);
     const std::vector<float>& operator[](size_t index) const;
-
+    bool operator==(const Matrix& other) const;
  private:
     MatrixImpl impl_;
 };

@@ -38,6 +38,17 @@ const std::vector<float>& Matrix::operator[](size_t index) const {
     return impl_.at(index);
 }
 
+bool Matrix::operator==(const Matrix& other) const {
+    if (this->dim() != other.dim())
+        return false;
+    for (auto row = 0U; row < this->dim().i; ++row) {
+        if (impl_.at(row) != other.impl_.at(row)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool admits_tile(const Matrix& matrix, size_t tile_size) {
     const auto dim = matrix.dim();
     return tile_size <= dim.i && tile_size <= dim.j;

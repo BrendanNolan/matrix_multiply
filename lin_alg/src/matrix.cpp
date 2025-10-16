@@ -1,6 +1,7 @@
 #include "matrix.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <random>
 
 namespace lin_alg {
@@ -54,11 +55,14 @@ const std::vector<float>& Matrix::operator[](size_t index) const {
 }
 
 bool Matrix::operator==(const Matrix& other) const {
+    constexpr auto tolerance = 0.00000001f;
     if (this->dim() != other.dim())
         return false;
     for (auto row = 0U; row < this->dim().i; ++row) {
-        if (impl_.at(row) != other.impl_.at(row)) {
-            return false;
+        for (auto column = 0U; column < this->dim().j; ++column) {
+            if (std::abs(impl_.at(row).at(column) - other.impl_.at(row).at(column)) > tolerance) {
+                return false;
+            }
         }
     }
     return true;

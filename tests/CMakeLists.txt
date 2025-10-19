@@ -1,3 +1,6 @@
+# Optional: debug which paths CMake searches
+set(CMAKE_FIND_DEBUG_MODE ON)
+
 find_package(GTest CONFIG REQUIRED)
 
 file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")

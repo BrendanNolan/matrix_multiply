@@ -1,9 +1,0 @@
-# Create a virtual environment in your project
-python3 -m venv .venv
-
-# Activate it
-source .venv/bin/activate
-
-# Install Conan inside the venv
-pip install conan
-

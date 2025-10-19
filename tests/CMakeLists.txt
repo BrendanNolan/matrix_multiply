@@ -7,8 +7,8 @@ add_executable(lin_alg_tests ${TEST_SOURCES})
 target_link_libraries(lin_alg_tests
     PRIVATE
         lin_alg
-        GTest::GTest
-        GTest::Main
+        GTest::gtest
+        GTest::gtest_main
 )
 
 target_include_directories(lin_alg_tests

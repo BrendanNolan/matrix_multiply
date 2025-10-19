@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Optional Conan toolchain
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 
+# Ensure CMake can find Conan-generated package configs
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 enable_testing()
 
 add_subdirectory(lin_alg)

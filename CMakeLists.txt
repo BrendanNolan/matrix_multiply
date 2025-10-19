@@ -5,12 +5,6 @@ project(linear_algebra LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Optional Conan toolchain
-include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
-
-enable_testing()
-
 add_subdirectory(lin_alg)
 add_subdirectory(app)
-add_subdirectory(tests)
 

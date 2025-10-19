@@ -17,7 +17,7 @@ if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
     bail
 fi
 
-conan install . --output-folder build --build=missing
+conan install . --output-folder=build
 cmake -S . -B build \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \

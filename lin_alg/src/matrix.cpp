@@ -120,9 +120,9 @@ Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) 
         for (auto j = 0U; j < N; j += T) {
             // top left of current C block is at (i,j)
             for (auto k = 0U; k < K; k += T) {
-                for (auto ii = i; ii < std::min(i + T, M); ++ii) {
-                    for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                        for (auto kk = k; kk < std::min(k + T, K); ++kk) {
+                for (auto kk = k; kk < std::min(k + T, K); ++kk) {
+                    for (auto ii = i; ii < std::min(i + T, M); ++ii) {
+                        for (auto jj = j; jj < std::min(j + T, N); ++jj) {
                             C[ii][jj] += a[ii][kk] * b[kk][jj];
                         }
                     }

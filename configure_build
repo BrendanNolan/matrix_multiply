@@ -3,21 +3,21 @@
 set -euo pipefail
 
 bail() {
-    echo "Usage: configure_build <build_type(Release or Debug)>" >&2
-    exit 1
+	echo "Usage: configure_build <build_type(Release or Debug)>" >&2
+	exit 1
 }
 
 mkdir -p build
 
 build_type=Release
 if [[ $# -eq 1 ]]; then
-    build_type="${1}"
+	build_type="${1}"
 fi
 if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
-    bail
+	bail
 fi
 
 conan install . --output-folder=build --settings build_type="${build_type}"
 cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DCMAKE_BUILD_TYPE="${build_type}"
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+	-DCMAKE_BUILD_TYPE="${build_type}"

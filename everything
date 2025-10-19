@@ -38,7 +38,7 @@ if [[ ! "${build_type}" =~ ^(Debug|Release)$ ]]; then
 fi
 
 if [[ -v VIRTUAL_ENV ]]; then
-    deactivate
+	deactivate || true
 fi
 git clean -fdx
 python3 -m venv .venv

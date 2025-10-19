@@ -88,7 +88,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
 
 bool admits_tile(const Matrix& matrix, size_t tile_size) {
     const auto dim = matrix.dim();
-    return tile_size <= dim.i && tile_size <= dim.j;
+    return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
 }
 
 Matrix naive_multiply(const Matrix& a, const Matrix& b) {

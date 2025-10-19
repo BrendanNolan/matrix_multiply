@@ -14,6 +14,10 @@ bool Dimension::operator==(const Dimension& other) const {
     return this->i == other.i && this->j == other.j;
 }
 
+bool Dimension::operator!=(const Dimension& other) const {
+    return !(*this == other);
+}
+
 Dimension dimension(const MatrixImpl& matrix) {
     if (matrix.empty())
         return Dimension{0U, 0U};

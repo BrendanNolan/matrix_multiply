@@ -27,6 +27,6 @@ if [[ $# -eq 1 ]]; then
 fi
 
 conan install . --output-folder=build --build=missing --settings build_type="${build_type}"
-cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+cmake -B build -S . \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 	-DCMAKE_BUILD_TYPE="${build_type}"

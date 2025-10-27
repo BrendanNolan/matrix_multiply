@@ -26,7 +26,7 @@ class Matrix {
     bool operator==(const Matrix& other) const;
     const float* raw() const;
  private:
-    float* impl_ = nullptr;
+    float* data_ = nullptr;
     Dimension dim_;
 };
 

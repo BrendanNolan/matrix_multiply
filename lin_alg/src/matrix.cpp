@@ -19,12 +19,12 @@ bool Dimension::operator!=(const Dimension& other) const {
 }
 
 Matrix::Matrix(float* impl, const Dimension& dim)
-    : impl_{impl}
+    : data_{impl}
     , dim_{dim} {
 }
 
 Matrix::~Matrix() {
-    free(impl_);
+    free(data_);
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
@@ -32,11 +32,11 @@ Matrix Matrix::zeroes(const Dimension& dim) {
 }
 
 float Matrix::operator()(const size_t i, const size_t j) const {
-    return impl_[i * dim_.j + j];
+    return data_[i * dim_.j + j];
 }
 
 float& Matrix::operator()(const size_t i, const size_t j) {
-    return impl_[i * dim_.j + j];
+    return data_[i * dim_.j + j];
 }
 
 Matrix Matrix::random(const Dimension& dim) {
@@ -70,7 +70,7 @@ bool Matrix::operator==(const Matrix& other) const {
 }
 
 const float* Matrix::raw() const {
-    return impl_;
+    return data_;
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {

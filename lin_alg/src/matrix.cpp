@@ -18,20 +18,25 @@ bool Dimension::operator!=(const Dimension& other) const {
     return !(*this == other);
 }
 
-Dimension dimension(const MatrixImpl& matrix) {
-    if (matrix.empty())
-        return Dimension{0U, 0U};
-    assert(!matrix.front().empty());
-    return Dimension{matrix.size(), matrix.front().size()};
+Matrix::Matrix(float* impl, const Dimension& dim)
+    : impl_{impl}
+    , dim_{dim} {
 }
 
-Matrix::Matrix(const MatrixImpl& impl)
-    : impl_{impl} {
+Matrix::~Matrix() {
+    free(impl_);
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
-    const auto row = std::vector<float>(dim.j, 0.0f);
-    return Matrix{MatrixImpl{dim.i, row}};
+    return Matrix{static_cast<float*>(calloc(dim.i * dim.j, sizeof(float))), dim};
+}
+
+float Matrix::operator()(const size_t i, const size_t j) const {
+    return impl_[i * dim_.j + j];
+}
+
+float& Matrix::operator()(const size_t i, const size_t j) {
+    return impl_[i * dim_.j + j];
 }
 
 Matrix Matrix::random(const Dimension& dim) {
@@ -40,22 +45,14 @@ Matrix Matrix::random(const Dimension& dim) {
     auto matrix = Matrix::zeroes(dim);
     for (auto i = 0U; i < dim.i; ++i) {
         for (auto j = 0U; j < dim.j; ++j) {
-            matrix[i][j] = dist(gen);
+            matrix(i, j) = dist(gen);
         }
     }
     return matrix;
 }
 
 Dimension Matrix::dim() const {
-    return dimension(impl_);
-}
-
-std::vector<float>& Matrix::operator[](size_t index) {
-    return impl_.at(index);
-}
-
-const std::vector<float>& Matrix::operator[](size_t index) const {
-    return impl_.at(index);
+    return dim_;
 }
 
 bool Matrix::operator==(const Matrix& other) const {
@@ -64,7 +61,7 @@ bool Matrix::operator==(const Matrix& other) const {
         return false;
     for (auto row = 0U; row < this->dim().i; ++row) {
         for (auto column = 0U; column < this->dim().j; ++column) {
-            if (std::abs(impl_.at(row).at(column) - other.impl_.at(row).at(column)) > tolerance) {
+            if (std::abs((*this)(row, column) - other(row, column)) > tolerance) {
                 return false;
             }
         }
@@ -72,18 +69,14 @@ bool Matrix::operator==(const Matrix& other) const {
     return true;
 }
 
-MatrixImpl Matrix::raw() const {
-    return impl_;
-}
-
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     if (matrix.dim().i == 0U || matrix.dim().j == 0U) {
         os << std::endl;
         return os;
     }
-    for (const auto& row : matrix.raw()) {
-        for (const auto entry : row) {
-            os << entry << ' ';
+    for (auto i = 0U; i < matrix.dim().i; ++i) {
+        for (auto j = 0U; j < matrix.dim().j; ++j) {
+            os << matrix(i, j) << ' ';
         }
         os << std::endl;
     }
@@ -101,7 +94,7 @@ Matrix naive_multiply(const Matrix& a, const Matrix& b) {
     for (auto i = 0U; i < a.dim().i; ++i) {
         for (auto j = 0U; j < b.dim().j; ++j) {
             for (auto k = 0U; k < a.dim().j; ++k) {
-                c[i][j] += a[i][k] * b[k][j];
+                c(i, j) += a(i, k) * b(k, j);
             }
         }
     }
@@ -123,7 +116,7 @@ Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) 
                 for (auto ii = i; ii < std::min(i + T, M); ++ii) {
                     for (auto kk = k; kk < std::min(k + T, K); ++kk) {
                         for (auto jj = j; jj < std::min(j + T, N); ++jj) {
-                            C[ii][jj] += a[ii][kk] * b[kk][jj];
+                            C(ii, jj) += a(ii, kk) * b(kk, jj);
                         }
                     }
                 }

@@ -1,11 +1,13 @@
 #include "gpu_matrix.cuh"
 
-__device__ void copy_elements(const lin_alg::Matrix* source,
-        float* target, const size_t);
+__device__ void copy_elements(const float* source,
+        const size_t start,
+        const size_t count,
+        float* target);
 
-__global__ void tiled_multiply(const lin_alg::Matrix* A,
-        const lin_alg::Matrix* B,
-        lin_alg::Matrix* C) {
+__global__ void tiled_multiply(const float* A,
+        const float* B,
+        float* C) {
     const auto T = blockDim.x;
     extern __shared__ float shared[];
     float* a_data = shared;

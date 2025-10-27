@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(linear_algebra LANGUAGES CXX)
+project(linear_algebra LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,6 +14,7 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 enable_testing()
 
 add_subdirectory(lin_alg)
+add_subdirectory(kernels)
 add_subdirectory(app)
 add_subdirectory(tests)
 

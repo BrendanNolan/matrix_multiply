@@ -3,7 +3,6 @@
 #include <cassert>
 #include <ostream>
 #include <string>
-#include <vector>
 
 namespace lin_alg {
 
@@ -25,6 +24,7 @@ class Matrix {
     float operator()(size_t i, size_t j) const;
     float& operator()(size_t i, size_t j);
     bool operator==(const Matrix& other) const;
+    const float* raw() const;
  private:
     float* impl_ = nullptr;
     Dimension dim_;

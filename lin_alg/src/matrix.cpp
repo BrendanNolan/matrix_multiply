@@ -69,6 +69,10 @@ bool Matrix::operator==(const Matrix& other) const {
     return true;
 }
 
+const float* Matrix::raw() const {
+    return impl_;
+}
+
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     if (matrix.dim().i == 0U || matrix.dim().j == 0U) {
         os << std::endl;

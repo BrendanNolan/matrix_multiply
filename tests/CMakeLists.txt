@@ -2,6 +2,7 @@ find_package(GTest CONFIG REQUIRED)
 
 file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
+add_compile_options(-Wall -Wextra -Werror)
 add_executable(lin_alg_tests ${TEST_SOURCES})
 
 target_link_libraries(lin_alg_tests

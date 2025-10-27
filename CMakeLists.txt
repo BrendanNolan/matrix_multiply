@@ -3,7 +3,6 @@ project(linear_algebra LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Wextra -Werror)
 
 # Include Conan toolchain early
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)

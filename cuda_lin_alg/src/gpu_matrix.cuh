@@ -1,5 +1,7 @@
 #pragma once
 
+#include "matrix.hpp"
+
 namespace cuda_lin_alg {
 
 __global__ void tiled_multiply(const float* A,

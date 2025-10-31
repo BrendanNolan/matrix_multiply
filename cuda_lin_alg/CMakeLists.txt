@@ -13,5 +13,6 @@ set_target_properties(cuda_lin_alg PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 target_link_libraries(cuda_lin_alg
+    PRIVATE lin_alg
     PRIVATE CUDA::cudart)
 

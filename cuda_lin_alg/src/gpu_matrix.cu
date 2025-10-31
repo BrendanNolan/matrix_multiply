@@ -1,23 +1,41 @@
 #include "gpu_matrix.cuh"
+#include <cassert>
+#include <cuda_runtime.h>
 
-__device__ void copy_elements(const float* source,
-        const size_t start,
-        const size_t count,
-        float* target);
+namespace cuda_lin_alg {
 
 __global__ void tiled_multiply(const float* A,
+        const size_t ai,
+        const size_t aj,
         const float* B,
+        const size_t bj,
         float* C) {
+    assert(blockDim.x == blockDim.y);
     const auto T = blockDim.x;
     extern __shared__ float shared[];
-    float* a_data = shared;
-    float* b_data = shared + T*T;
-    float* c_data = shared + 2*T*T;
-    const auto tile_dim = lin_alg::Dimension{T, T};
-    const auto a = lin_alg::Matrix{a_data, tile_dim};
-    const auto b = lin_alg::Matrix{b_data, tile_dim};
-    auto c = lin_alg::Matrix{c_data, tile_dim};
-    const auto i = blockIdx.x * blockDim.x;
-    const auto j = blockIdx.y * blockDim.y;
-    // for (auto kk = )
+    float* a_tile = shared;
+    float* b_tile = shared + T * T;
+    float* c_tile = shared + 2 * T * T;
+    const auto g_corner_i = blockIdx.x * blockDim.x;
+    const auto g_corner_j = blockIdx.y * blockDim.y;
+    const auto g_i = g_corner_i + threadIdx.x;
+    const auto g_j = g_corner_j + threadIdx.y;
+    const auto g_c_cell = g_i * aj + g_j;
+    if (g_c_cell >= ai * bj)
+        return;
+    const auto l_c_cell = threadIdx.x * T + threadIdx.y;
+    c_tile[l_c_cell] = 0.0f;
+    for (auto k = 0U; k < aj; k += T) {
+        a_tile[l_c_cell] = A[g_i * aj + k];
+        b_tile[l_c_cell] = B[k * bj + g_j];
+        __syncthreads();
+        for (auto kk = k; kk < min(aj, static_cast<size_t>(k + T)); ++kk) {
+            c_tile[l_c_cell] += a_tile[threadIdx.x * T + k] * b_tile[k * T + threadIdx.y];
+        }
+    }
+    __syncthreads();
+    C[g_i * bj + g_j] = c_tile[l_c_cell];
+    __syncthreads();
 }
+
+}// namespace cuda_lin_alg

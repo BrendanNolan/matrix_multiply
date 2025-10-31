@@ -8,6 +8,7 @@ add_executable(lin_alg_tests ${TEST_SOURCES})
 target_link_libraries(lin_alg_tests
     PRIVATE
         lin_alg
+        cuda_lin_alg
         GTest::gtest
         GTest::gtest_main
 )

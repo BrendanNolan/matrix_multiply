@@ -10,16 +10,8 @@
 using Dim = lin_alg::Dimension;
 
 TEST(FirstTest, MultiplyDim) {
-    auto pow2 = [](size_t x) {
-        auto result = 1U;
-        while (x != 0U) {
-            result *= 2U;
-            --x;
-        }
-        return result;
-    };
-    const auto a = lin_alg::Matrix::random(Dim{pow2(11U), pow2(10U)});
-    const auto b = lin_alg::Matrix::random(Dim{pow2(10U), pow2(12U)});
+    const auto a = lin_alg::Matrix::random(Dim{1 << 11, 1 << 10});
+    const auto b = lin_alg::Matrix::random(Dim{1 << 10, 1 << 12});
 
     auto start = std::chrono::high_resolution_clock::now();
     const auto naive_multiply_result = lin_alg::naive_multiply(a, b);

@@ -59,8 +59,8 @@ lin_alg::Matrix
     cudaMalloc(&C, c_bytes);
     const auto block_dim =
             dim3{static_cast<unsigned int>(tile_size), static_cast<unsigned int>(tile_size)};
-    const auto grid_dim = dim3{static_cast<unsigned int>(a.dim().i + 1 / tile_size),
-            static_cast<unsigned int>(b.dim().j + 1 / tile_size)};
+    const auto grid_dim = dim3{static_cast<unsigned int>((a.dim().i + tile_size - 1) / tile_size),
+            static_cast<unsigned int>((b.dim().j + tile_size - 1) / tile_size)};
     const auto shared_mem_size = static_cast<unsigned int>(tile_size * tile_size * 3U);
     const auto start = std::chrono::high_resolution_clock::now();
     tiled_multiply<<<grid_dim, block_dim, shared_mem_size>>>(A, a.dim().i, a.dim().j, B, b.dim().j, C);

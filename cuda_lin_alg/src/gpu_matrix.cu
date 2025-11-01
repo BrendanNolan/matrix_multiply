@@ -22,7 +22,7 @@ __global__ void tiled_multiply(const float* A,
     const auto g_corner_j = blockIdx.y * blockDim.y;
     const auto g_i = g_corner_i + threadIdx.x;
     const auto g_j = g_corner_j + threadIdx.y;
-    const auto g_c_cell = g_i * aj + g_j;
+    const auto g_c_cell = g_i * bj + g_j;
     if (g_c_cell >= ai * bj)
         return;
     const auto l_c_cell = threadIdx.x * T + threadIdx.y;
@@ -36,7 +36,7 @@ __global__ void tiled_multiply(const float* A,
         }
     }
     __syncthreads();
-    C[g_i * bj + g_j] = c_tile[l_c_cell];
+    C[g_c_cell] = c_tile[l_c_cell];
     __syncthreads();
 }
 

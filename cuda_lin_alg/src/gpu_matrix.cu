@@ -29,7 +29,7 @@ __global__ void tiled_multiply(const float* A,
         a_tile[l_c_cell] = A[g_i * aj + (k + threadIdx.y)];
         b_tile[l_c_cell] = B[(k + threadIdx.x) * bj + g_j];
         __syncthreads();
-        for (auto kk = 0; kk + k < min(k + T, aj); ++kk) {
+        for (auto kk = 0; kk + k < min(k + T, static_cast<unsigned int>(aj)); ++kk) {
             c_tile[l_c_cell] += a_tile[threadIdx.x * T + kk] * b_tile[kk * T + threadIdx.y];
         }
     }

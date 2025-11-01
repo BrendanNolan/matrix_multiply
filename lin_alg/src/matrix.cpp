@@ -83,6 +83,10 @@ std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     return os;
 }
 
+size_t raw_size(const Matrix& matrix) {
+    return matrix.dim().i * matrix.dim().j;
+}
+
 bool admits_tile(const Matrix& matrix, size_t tile_size) {
     const auto dim = matrix.dim();
     return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;

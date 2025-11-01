@@ -2,7 +2,7 @@
 #include <cassert>
 #include <cuda_runtime.h>
 
-namespace cuda_lin_alg {
+namespace {
 
 __global__ void tiled_multiply(const float* A,
         const size_t ai,
@@ -36,6 +36,33 @@ __global__ void tiled_multiply(const float* A,
     __syncthreads();
     C[g_i * bj + g_j] = c_tile[l_c_cell];
     __syncthreads();
+}
+
+}// namespace
+
+namespace cuda_lin_alg {
+
+lin_alg::Matrix
+        cuda_tiled_multiply(const lin_alg::Matrix& a, const lin_alg::Matrix& b, size_t tile_size) {
+    const auto a_bytes = raw_size(a) * sizeof(float);
+    float* A;
+    cudaMalloc(&A, a_bytes);
+    cudaMemcpy(A, a.raw(), a_bytes, cudaMemcpyHostToDevice);
+    const auto b_bytes = raw_size(b) * sizeof(float);
+    float* B;
+    cudaMalloc(&B, b_bytes);
+    cudaMemcpy(B, b.raw(), b_bytes, cudaMemcpyHostToDevice);
+    const auto c_bytes = a.dim().i * b.dim().j * sizeof(float);
+    float* C;
+    cudaMalloc(&C, c_bytes);
+    const auto block_dim =
+            dim3{static_cast<unsigned int>(tile_size), static_cast<unsigned int>(tile_size)};
+    const auto grid_dim = dim3{static_cast<unsigned int>(a.dim().i + 1 / tile_size),
+            static_cast<unsigned int>(b.dim().j + 1 / tile_size)};
+    tiled_multiply<<<grid_dim, block_dim, 1 << 12>>>(A, a.dim().i, a.dim().j, B, b.dim().j, C);
+    float* h_C = static_cast<float*>(malloc(c_bytes * sizeof(float)));
+    cudaMemcpy(C, h_C, c_bytes, cudaMemcpyDeviceToHost);
+    return lin_alg::Matrix{h_C, lin_alg::Dimension{a.dim().i, b.dim().j}};
 }
 
 }// namespace cuda_lin_alg

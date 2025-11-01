@@ -29,6 +29,7 @@ class Matrix {
     Dimension dim_;
 };
 
+size_t raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
 bool admits_tile(const Matrix& matrix, size_t tile_size);
 Matrix naive_multiply(const Matrix& a, const Matrix& b);

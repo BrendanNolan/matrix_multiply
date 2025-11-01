@@ -12,6 +12,10 @@ set_target_properties(cuda_lin_alg PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     POSITION_INDEPENDENT_CODE ON
 )
+target_include_directories(lin_alg
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 target_link_libraries(cuda_lin_alg
     PRIVATE lin_alg
     PRIVATE CUDA::cudart)

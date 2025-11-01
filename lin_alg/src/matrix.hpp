@@ -17,6 +17,7 @@ std::string display(const Dimension& dim);
 class Matrix {
  public:
     static Matrix zeroes(const Dimension& dim);
+    static Matrix all_same(float entry, const Dimension& dim);
     static Matrix random(const Dimension& dim);
     static Matrix from_raw(float* entries, const Dimension& dim);
     ~Matrix();

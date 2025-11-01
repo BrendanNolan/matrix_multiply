@@ -35,6 +35,14 @@ Matrix Matrix::zeroes(const Dimension& dim) {
     return Matrix{static_cast<float*>(calloc(dim.i * dim.j, sizeof(float))), dim};
 }
 
+Matrix Matrix::all_same(float entry, const Dimension& dim) {
+    auto* entries = static_cast<float*>(malloc(dim.i * dim.j * sizeof(float)));
+    for (auto index = 0U; index < dim.i * dim.j; ++index) {
+        entries[index] = entry;
+    }
+    return Matrix{entries, dim};
+}
+
 float Matrix::operator()(const size_t i, const size_t j) const {
     return data_[i * dim_.j + j];
 }

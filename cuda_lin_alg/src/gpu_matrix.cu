@@ -62,6 +62,7 @@ lin_alg::Matrix
     tiled_multiply<<<grid_dim, block_dim, 1 << 12>>>(A, a.dim().i, a.dim().j, B, b.dim().j, C);
     float* h_C = static_cast<float*>(malloc(c_bytes * sizeof(float)));
     cudaMemcpy(C, h_C, c_bytes, cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
     return lin_alg::Matrix{h_C, lin_alg::Dimension{a.dim().i, b.dim().j}};
 }
 

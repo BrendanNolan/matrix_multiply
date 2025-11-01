@@ -23,6 +23,14 @@ Matrix::Matrix(float* impl, const Dimension& dim)
     , dim_{dim} {
 }
 
+Matrix Matrix::from_raw(float* impl, const Dimension& dim) {
+    return Matrix{impl, dim};
+}
+
+Matrix::~Matrix() {
+    free(data_);
+}
+
 Matrix Matrix::zeroes(const Dimension& dim) {
     return Matrix{static_cast<float*>(calloc(dim.i * dim.j, sizeof(float))), dim};
 }

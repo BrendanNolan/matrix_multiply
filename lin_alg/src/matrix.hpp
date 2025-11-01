@@ -16,14 +16,17 @@ std::string display(const Dimension& dim);
 
 class Matrix {
  public:
-    Matrix(float* entries, const Dimension& dim);
     static Matrix zeroes(const Dimension& dim);
     static Matrix random(const Dimension& dim);
+    static Matrix from_raw(float* entries, const Dimension& dim);
+    ~Matrix();
     Dimension dim() const;
     float operator()(size_t i, size_t j) const;
     float& operator()(size_t i, size_t j);
     bool operator==(const Matrix& other) const;
     const float* raw() const;
+ private:
+    Matrix(float* entries, const Dimension& dim);
  private:
     float* data_ = nullptr;
     Dimension dim_;

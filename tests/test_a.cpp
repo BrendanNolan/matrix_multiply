@@ -27,12 +27,8 @@ TEST(FirstTest, MultiplyDim) {
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Tiled multiply time: " << tiled_time << " ms" << std::endl;
 
-    start = std::chrono::high_resolution_clock::now();
+    // This function will print its own timing
     const auto cuda_multiply_result = cuda_lin_alg::cuda_tiled_multiply(a, b, 4U);
-    end = std::chrono::high_resolution_clock::now();
-    const auto cuda_time =
-            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "cuda multiply time: " << cuda_time << " ms" << std::endl;
 
     EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
     EXPECT_EQ(cuda_multiply_result, naive_multiply_result);

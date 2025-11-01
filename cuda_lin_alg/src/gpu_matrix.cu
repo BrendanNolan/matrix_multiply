@@ -1,6 +1,8 @@
 #include "gpu_matrix.cuh"
 #include <cassert>
+#include <chrono>
 #include <cuda_runtime.h>
+#include <iostream>
 
 namespace {
 
@@ -59,8 +61,12 @@ lin_alg::Matrix
             dim3{static_cast<unsigned int>(tile_size), static_cast<unsigned int>(tile_size)};
     const auto grid_dim = dim3{static_cast<unsigned int>(a.dim().i + 1 / tile_size),
             static_cast<unsigned int>(b.dim().j + 1 / tile_size)};
+    const auto start = std::chrono::high_resolution_clock::now();
     tiled_multiply<<<grid_dim, block_dim, 1 << 12>>>(A, a.dim().i, a.dim().j, B, b.dim().j, C);
     cudaDeviceSynchronize();
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "Cuda multiply time: " << duration_ms << " ms" << std::endl;
     float* h_C = static_cast<float*>(malloc(c_bytes * sizeof(float)));
     cudaMemcpy(C, h_C, c_bytes, cudaMemcpyDeviceToHost);
     return lin_alg::Matrix{h_C, lin_alg::Dimension{a.dim().i, b.dim().j}};

@@ -10,8 +10,8 @@
 using Dim = lin_alg::Dimension;
 
 TEST(FirstTest, MultiplyDim) {
-    const auto a = lin_alg::Matrix::random(Dim{1 << 11, 1 << 10});
-    const auto b = lin_alg::Matrix::random(Dim{1 << 10, 1 << 12});
+    const auto a = lin_alg::Matrix::all_same(1.0f, Dim{3, 7});
+    const auto b = lin_alg::Matrix::all_same(1.0f, Dim{7, 4});
 
     auto start = std::chrono::high_resolution_clock::now();
     const auto naive_multiply_result = lin_alg::naive_multiply(a, b);

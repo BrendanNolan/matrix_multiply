@@ -34,8 +34,20 @@ __global__ void tiled_multiply(const float* A,
         }
     }
     __syncthreads();
+    // printf("Block (%d,%d), Thread (%d,%d), g_c_cell %d\n",
+    // blockIdx.x,
+    // blockIdx.y,
+    // threadIdx.x,
+    // threadIdx.y,
+    // static_cast<unsigned int>(g_c_cell));
     C[g_c_cell] = c_tile[l_c_cell];
     __syncthreads();
+    printf("---------------------------C[%d] == %f\n", g_c_cell, C[g_c_cell]);
+}
+
+std::ostream& operator<<(std::ostream& s, const dim3& d) {
+    s << "(" << d.x << ", " << d.y << ", " << d.z << ")";
+    return s;
 }
 
 }// namespace

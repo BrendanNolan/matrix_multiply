@@ -28,18 +28,21 @@ __global__ void tiled_multiply(const float* A,
     for (auto k = 0U; k < aj; k += T) {
         a_tile[l_c_cell] = A[g_i * aj + (k + threadIdx.y)];
         b_tile[l_c_cell] = B[(k + threadIdx.x) * bj + g_j];
+        printf("GridDim (%d,%d), Block (%d,%d), Thread (%d,%d), B[%d,%d]\n",
+                        gridDim.x,
+                        gridDim.y,
+                        blockIdx.x,
+                        blockIdx.y,
+                        threadIdx.x,
+                        threadIdx.y,
+                        k + threadIdx.x,
+                        bj + g_j);
         __syncthreads();
         for (auto kk = 0; kk + k < min(k + T, static_cast<unsigned int>(aj)); ++kk) {
             c_tile[l_c_cell] += a_tile[threadIdx.x * T + kk] * b_tile[kk * T + threadIdx.y];
         }
     }
     __syncthreads();
-    // printf("Block (%d,%d), Thread (%d,%d), g_c_cell %d\n",
-    // blockIdx.x,
-    // blockIdx.y,
-    // threadIdx.x,
-    // threadIdx.y,
-    // static_cast<unsigned int>(g_c_cell));
     C[g_c_cell] = c_tile[l_c_cell];
     __syncthreads();
     printf("---------------------------C[%d] == %f\n", g_c_cell, C[g_c_cell]);

@@ -70,8 +70,8 @@ const float* Matrix::raw() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
+    os << std::endl;
     if (matrix.dim().i == 0U || matrix.dim().j == 0U) {
-        os << std::endl;
         return os;
     }
     for (auto i = 0U; i < matrix.dim().i; ++i) {

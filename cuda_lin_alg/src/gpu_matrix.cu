@@ -60,9 +60,9 @@ lin_alg::Matrix
     const auto grid_dim = dim3{static_cast<unsigned int>(a.dim().i + 1 / tile_size),
             static_cast<unsigned int>(b.dim().j + 1 / tile_size)};
     tiled_multiply<<<grid_dim, block_dim, 1 << 12>>>(A, a.dim().i, a.dim().j, B, b.dim().j, C);
+    cudaDeviceSynchronize();
     float* h_C = static_cast<float*>(malloc(c_bytes * sizeof(float)));
     cudaMemcpy(C, h_C, c_bytes, cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
     return lin_alg::Matrix{h_C, lin_alg::Dimension{a.dim().i, b.dim().j}};
 }
 

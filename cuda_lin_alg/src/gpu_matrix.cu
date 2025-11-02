@@ -25,13 +25,11 @@ __global__ void tiled_multiply(const float* A,
     for (auto k = 0U; k < aj; k += T) {
         const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
         const auto in_scope_for_b = (k + threadIdx.x < aj && g_j < bj);
-        printf("In scope for a: %d, in scope for b: %d\n", in_scope_for_a, in_scope_for_b);
         a_tile[l_c_cell] = in_scope_for_a ? A[g_i * aj + (k + threadIdx.y)] : 0U;
         b_tile[l_c_cell] = in_scope_for_b ? B[(k + threadIdx.x) * bj + g_j] : 0U;
         __syncthreads();
         for (auto kk = 0U; kk < T; ++kk) {
             c_tile[l_c_cell] += a_tile[threadIdx.x * T + kk] * b_tile[kk * T + threadIdx.y];
-            printf("c_tile[%u]==%f\n", l_c_cell, c_tile[l_c_cell]);
         }
         if (g_i < ai && g_j < bj)
             C[g_i * bj + g_j] = c_tile[l_c_cell];

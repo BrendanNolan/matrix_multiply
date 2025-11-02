@@ -18,14 +18,14 @@ TEST(FirstTest, MultiplyDim) {
     auto end = std::chrono::high_resolution_clock::now();
     const auto naive_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Naive multiply time: " << naive_time << " ms" << std::endl;
+    std::cout << "Naive CPU execution time: " << naive_time << " ms" << std::endl;
 
     start = std::chrono::high_resolution_clock::now();
     auto tiled_multiply_result = lin_alg::tiled_multiply(a, b, 4U);
     end = std::chrono::high_resolution_clock::now();
     const auto tiled_time =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Tiled multiply time: " << tiled_time << " ms" << std::endl;
+    std::cout << "Optimised CPU execution time: " << tiled_time << " ms" << std::endl;
 
     // This function will print its own timing
     const auto cuda_multiply_result = cuda_lin_alg::cuda_tiled_multiply(a, b, 4U);

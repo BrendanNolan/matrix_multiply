@@ -67,7 +67,7 @@ lin_alg::Matrix cuda_tiled_multiply(const lin_alg::Matrix& a,
     const auto end = std::chrono::high_resolution_clock::now();
     const auto duration_ms =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Cuda multiply time: " << duration_ms << " ms" << std::endl;
+    std::cout << "Optimised GPU execution time: " << duration_ms << " ms" << std::endl;
     float* h_C = static_cast<float*>(malloc(c_bytes * sizeof(float)));
     cudaMemcpy(h_C, C, c_bytes, cudaMemcpyDeviceToHost);
     return lin_alg::Matrix::from_raw(h_C, lin_alg::Dimension{a.dim().i, b.dim().j});

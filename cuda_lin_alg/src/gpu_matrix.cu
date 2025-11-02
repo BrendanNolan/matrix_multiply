@@ -27,10 +27,10 @@ __global__ void tiled_multiply(const float* A,
         for (auto kk = 0U; kk < T; ++kk) {
             c_tile[l_c_cell] += a_tile[threadIdx.x * T + kk] * b_tile[kk * T + threadIdx.y];
         }
-        if (g_i < ai && g_j < bj)
-            C[g_i * bj + g_j] = c_tile[l_c_cell];
         __syncthreads();
     }
+    if (g_i < ai && g_j < bj)
+        C[g_i * bj + g_j] = c_tile[l_c_cell];
 }
 
 }// namespace cuda_lin_alg

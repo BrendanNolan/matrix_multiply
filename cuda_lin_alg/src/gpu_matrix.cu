@@ -7,10 +7,10 @@
 namespace {
 
 __global__ void tiled_multiply(const float* A,
-        const size_t ai,
-        const size_t aj,
+        const unsigned int ai,
+        const unsigned int aj,
         const float* B,
-        const size_t bj,
+        const unsigned int bj,
         float* C) {
     assert(blockDim.x == blockDim.y);
     const auto T = blockDim.x;
@@ -42,8 +42,9 @@ __global__ void tiled_multiply(const float* A,
 
 namespace cuda_lin_alg {
 
-lin_alg::Matrix
-        cuda_tiled_multiply(const lin_alg::Matrix& a, const lin_alg::Matrix& b, size_t tile_size) {
+lin_alg::Matrix cuda_tiled_multiply(const lin_alg::Matrix& a,
+        const lin_alg::Matrix& b,
+        unsigned int tile_size) {
     const auto a_bytes = raw_size(a) * sizeof(float);
     float* A;
     cudaMalloc(&A, a_bytes);

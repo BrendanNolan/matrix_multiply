@@ -7,8 +7,8 @@
 namespace lin_alg {
 
 struct Dimension {
-    size_t i = 0U;
-    size_t j = 0U;
+    unsigned int i = 0U;
+    unsigned int j = 0U;
     bool operator==(const Dimension& other) const;
     bool operator!=(const Dimension& other) const;
 };
@@ -22,8 +22,8 @@ class Matrix {
     static Matrix from_raw(float* entries, const Dimension& dim);
     ~Matrix();
     Dimension dim() const;
-    float operator()(size_t i, size_t j) const;
-    float& operator()(size_t i, size_t j);
+    float operator()(unsigned int i, unsigned int j) const;
+    float& operator()(unsigned int i, unsigned int j);
     bool operator==(const Matrix& other) const;
     const float* raw() const;
  private:
@@ -33,10 +33,10 @@ class Matrix {
     Dimension dim_;
 };
 
-size_t raw_size(const Matrix& m);
+unsigned int raw_size(const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
-bool admits_tile(const Matrix& matrix, size_t tile_size);
+bool admits_tile(const Matrix& matrix, unsigned int tile_size);
 Matrix naive_multiply(const Matrix& a, const Matrix& b);
-Matrix tiled_multiply(const Matrix& a, const Matrix& b, size_t tile_size);
+Matrix tiled_multiply(const Matrix& a, const Matrix& b, unsigned int tile_size);
 
 }// namespace lin_alg

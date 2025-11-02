@@ -43,11 +43,11 @@ Matrix Matrix::all_same(float entry, const Dimension& dim) {
     return Matrix{entries, dim};
 }
 
-float Matrix::operator()(const size_t i, const size_t j) const {
+float Matrix::operator()(const unsigned int i, const unsigned int j) const {
     return data_[i * dim_.j + j];
 }
 
-float& Matrix::operator()(const size_t i, const size_t j) {
+float& Matrix::operator()(const unsigned int i, const unsigned int j) {
     return data_[i * dim_.j + j];
 }
 
@@ -99,11 +99,11 @@ std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
     return os;
 }
 
-size_t raw_size(const Matrix& matrix) {
+unsigned int raw_size(const Matrix& matrix) {
     return matrix.dim().i * matrix.dim().j;
 }
 
-bool admits_tile(const Matrix& matrix, size_t tile_size) {
+bool admits_tile(const Matrix& matrix, unsigned int tile_size) {
     const auto dim = matrix.dim();
     return tile_size > 0U && tile_size <= dim.i && tile_size <= dim.j;
 }
@@ -121,7 +121,7 @@ Matrix naive_multiply(const Matrix& a, const Matrix& b) {
     return c;
 }
 
-Matrix tiled_multiply(const Matrix& a, const Matrix& b, const size_t tile_size) {
+Matrix tiled_multiply(const Matrix& a, const Matrix& b, const unsigned int tile_size) {
     assert(a.dim().j == b.dim().i);
     assert(admits_tile(a, tile_size) && admits_tile(b, tile_size) && tile_size > 0U);
     const auto M = a.dim().i;

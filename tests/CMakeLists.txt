@@ -1,8 +1,9 @@
 find_package(GTest CONFIG REQUIRED)
 
-file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cu"  "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+set_source_files_properties(${TEST_SOURCES} PROPERTIES LANGUAGE CUDA)
 
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall -Wextra)
 add_executable(lin_alg_tests ${TEST_SOURCES})
 
 target_link_libraries(lin_alg_tests

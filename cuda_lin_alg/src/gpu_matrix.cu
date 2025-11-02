@@ -20,22 +20,21 @@ __global__ void tiled_multiply(const float* A,
     float* c_tile = shared + 2 * T * T;
     const auto g_i = blockIdx.x * blockDim.x + threadIdx.x;
     const auto g_j = blockIdx.y * blockDim.y + threadIdx.y;
-    if (g_i >= ai || g_j >= bj)
-        return;
-    const auto g_c_cell = g_i * bj + g_j;
     const auto l_c_cell = threadIdx.x * T + threadIdx.y;
     c_tile[l_c_cell] = 0.0f;
     for (auto k = 0U; k < aj; k += T) {
-        a_tile[l_c_cell] = A[g_i * aj + (k + threadIdx.y)];
-        b_tile[l_c_cell] = B[(k + threadIdx.x) * bj + g_j];
+        const auto in_scope_for_a = (g_i < ai && k + threadIdx.y < aj);
+        const auto in_scope_for_b = (k + threadIdx.x < aj && g_j < bj);
+        a_tile[l_c_cell] = in_scope_for_a ? A[g_i * aj + (k + threadIdx.y)] : 0U;
+        b_tile[l_c_cell] = in_scope_for_b ? B[(k + threadIdx.x) * bj + g_j] : 0U;
         __syncthreads();
-        for (auto kk = 0; kk + k < min(k + T, static_cast<unsigned int>(aj)); ++kk) {
+        for (auto kk = 0U; kk < T; ++kk) {
             c_tile[l_c_cell] += a_tile[threadIdx.x * T + kk] * b_tile[kk * T + threadIdx.y];
         }
+        if (g_i < ai && g_j < bj)
+            C[g_i * bj + g_j] = c_tile[l_c_cell];
+        __syncthreads();
     }
-    __syncthreads();
-    C[g_c_cell] = c_tile[l_c_cell];
-    __syncthreads();
 }
 
 }// namespace

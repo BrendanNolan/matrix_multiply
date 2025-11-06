@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -114,7 +115,7 @@ void correctness_test(const unsigned int rows_left,
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
 }
 
-void speed_test(const unsigned int dim_of_square_matrix) {
+void comparative_speed_test(const unsigned int dim_of_square_matrix) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
 
@@ -139,14 +140,58 @@ void speed_test(const unsigned int dim_of_square_matrix) {
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
 }
 
+std::vector<LaunchConfig> generate_launch_configs(int dim_of_square_matrix) {
+    auto configs = std::vector<LaunchConfig>{};
+    const auto tile_sizes = std::vector<unsigned int>{8, 16, 32};
+    for (const auto tile_size : tile_sizes) {
+        if (dim_of_square_matrix % tile_size != 0)
+            continue;
+        const auto blocks = dim_of_square_matrix / tile_size;
+        const auto grid = dim3(blocks, blocks);
+        const auto block = dim3(tile_size, tile_size);
+        configs.push_back({grid, block, tile_size});
+    }
+    for (const auto bx : {8u, 16u, 32u}) {
+        for (const auto by : {8u, 16u, 32u}) {
+            if (dim_of_square_matrix % bx != 0 || dim_of_square_matrix % by != 0)
+                continue;
+            const auto grid = dim3(dim_of_square_matrix / bx, dim_of_square_matrix / by);
+            const auto block = dim3(bx, by);
+            const auto tile_size = static_cast<unsigned int>((bx + by) / 2);
+            configs.push_back({grid, block, tile_size});
+        }
+    }
+    return configs;
+}
+
+void many_config_speed_test(const unsigned int dim_of_square_matrix) {
+    const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
+    const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
+    for (const auto& config : generate_launch_configs(dim_of_square_matrix)) {
+        const auto input = ExtractInput(a, b, config);
+        const auto duration = raw_cuda_multiply(input);
+        std::cout << "With " << dim_of_square_matrix << "-square matrices and config "
+                  << to_string(config) << ", CUDA execution took " << duration.count() << " ms"
+                  << std::endl;
+    }
+}
+
 }// namespace
 
 TEST(SpeedTest, OneMillionElements) {
-    speed_test(1U << 10U);
+    comparative_speed_test(1U << 10U);
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    speed_test(1U << 7U);
+    comparative_speed_test(1U << 7U);
+}
+
+TEST(ManyConfigSpeedTest, OneMillionElements) {
+    many_config_speed_test(1U << 10U);
+}
+
+TEST(ManyConfigSpeedTest, OneThousandElements) {
+    many_config_speed_test(1U << 7U);
 }
 
 TEST(CorrectnessTest, Small) {

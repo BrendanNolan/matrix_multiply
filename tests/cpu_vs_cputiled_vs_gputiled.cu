@@ -105,6 +105,26 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
             .launch_config_used = input.config};
 }
 
+std::vector<LaunchConfig> generate_launch_configs(int dim_of_square_matrix) {
+    auto configs = std::vector<LaunchConfig>{};
+    const auto tile_sizes = std::vector<unsigned int>{1U, 8U, 16U, 32U};
+    for (const auto tile_size : tile_sizes) {
+        const auto blocks = dim_of_square_matrix / tile_size;
+        const auto grid = dim3(blocks, blocks);
+        const auto block = dim3(tile_size, tile_size);
+        configs.push_back({grid, block, tile_size});
+    }
+    for (const auto bx : {1U, 8U, 16U, 32U}) {
+        for (const auto by : {1U, 8U, 16U, 32U}) {
+            const auto grid = dim3(dim_of_square_matrix / bx, dim_of_square_matrix / by);
+            const auto block = dim3(bx, by);
+            const auto tile_size = static_cast<unsigned int>((bx + by) / 2);
+            configs.push_back({grid, block, tile_size});
+        }
+    }
+    return configs;
+}
+
 void correctness_test(const unsigned int rows_left,
         const unsigned int common,
         const unsigned int columns_right) {
@@ -112,7 +132,13 @@ void correctness_test(const unsigned int rows_left,
     const auto b = lin_alg::Matrix::random(Dim{common, columns_right});
     const auto naive_multiply_result = lin_alg::naive_multiply(a, b);
     const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
+    std::cout << "Used config " << to_string(cuda_multiply_result.launch_config_used) << std::endl;
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+    for (const auto& config : generate_launch_configs(common)) {
+        std::cout << "Using config: " << to_string(config) << std::endl;
+        const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
+        EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
+    }
 }
 
 void comparative_speed_test(const unsigned int dim_of_square_matrix) {
@@ -140,30 +166,6 @@ void comparative_speed_test(const unsigned int dim_of_square_matrix) {
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
 }
 
-std::vector<LaunchConfig> generate_launch_configs(int dim_of_square_matrix) {
-    auto configs = std::vector<LaunchConfig>{};
-    const auto tile_sizes = std::vector<unsigned int>{8, 16, 32};
-    for (const auto tile_size : tile_sizes) {
-        if (dim_of_square_matrix % tile_size != 0)
-            continue;
-        const auto blocks = dim_of_square_matrix / tile_size;
-        const auto grid = dim3(blocks, blocks);
-        const auto block = dim3(tile_size, tile_size);
-        configs.push_back({grid, block, tile_size});
-    }
-    for (const auto bx : {8u, 16u, 32u}) {
-        for (const auto by : {8u, 16u, 32u}) {
-            if (dim_of_square_matrix % bx != 0 || dim_of_square_matrix % by != 0)
-                continue;
-            const auto grid = dim3(dim_of_square_matrix / bx, dim_of_square_matrix / by);
-            const auto block = dim3(bx, by);
-            const auto tile_size = static_cast<unsigned int>((bx + by) / 2);
-            configs.push_back({grid, block, tile_size});
-        }
-    }
-    return configs;
-}
-
 void many_config_speed_test(const unsigned int dim_of_square_matrix) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
@@ -177,6 +179,14 @@ void many_config_speed_test(const unsigned int dim_of_square_matrix) {
 }
 
 }// namespace
+
+TEST(SpeedTest, SevenElements) {
+    comparative_speed_test(7U);
+}
+
+TEST(SpeedTest, ThirtyThreeElements) {
+    comparative_speed_test(33U);
+}
 
 TEST(SpeedTest, OneMillionElements) {
     comparative_speed_test(1U << 10U);

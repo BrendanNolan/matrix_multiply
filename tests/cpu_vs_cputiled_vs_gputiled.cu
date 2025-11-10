@@ -13,8 +13,11 @@ namespace {
 struct LaunchConfig {
     dim3 grid_dim;
     dim3 block_dim;
-    unsigned int tile_size;
 };
+unsigned int tile_size(const LaunchConfig& config) {
+    assert(config.block_dim.x == config.block_dim.y);
+    return config.block_dim.x * config.block_dim.x;
+}
 
 std::string to_string(const dim3& dim) {
     return "(" + std::to_string(dim.x) + "," + std::to_string(dim.y) + "," + std::to_string(dim.z)
@@ -22,8 +25,7 @@ std::string to_string(const dim3& dim) {
 }
 
 std::string to_string(const LaunchConfig& config) {
-    return "gridDim: " + to_string(config.grid_dim) + " blockDim: " + to_string(config.block_dim)
-            + " tile size: " + std::to_string(config.tile_size);
+    return "gridDim: " + to_string(config.grid_dim) + " blockDim: " + to_string(config.block_dim);
 }
 
 using Dim = lin_alg::Dimension;
@@ -39,8 +41,8 @@ struct CudaInput {
 };
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
-    const auto shared_mem_size =
-            static_cast<unsigned int>(input.config.tile_size * input.config.tile_size * 3U);
+    const auto shared_mem_size = static_cast<unsigned int>(tile_size(input.config) * 3U);
+    std::cout << "shared_mem_size: " << shared_mem_size << std::endl;
     const auto start = std::chrono::high_resolution_clock::now();
     cuda_lin_alg::
             tiled_multiply<<<input.config.grid_dim, input.config.block_dim, shared_mem_size>>>(
@@ -64,21 +66,20 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     const auto c_bytes = a.dim().i * b.dim().j * sizeof(float);
     float* C;
     cudaMalloc(&C, c_bytes);
-    const auto default_tile_size = 4U;
+    const auto default_block_edge_size = 4U;
+    const auto default_launch_config = LaunchConfig{
+            .grid_dim = dim3{static_cast<unsigned int>((a.dim().i + default_block_edge_size - 1)
+                                     / default_block_edge_size),
+                    static_cast<unsigned int>(
+                            (b.dim().j + default_block_edge_size - 1) / default_block_edge_size)},
+            .block_dim = dim3{default_block_edge_size, default_block_edge_size}};
     return CudaInput{.A = A,
             .ai = a.dim().i,
             .aj = a.dim().j,
             .B = B,
             .bj = b.dim().j,
             .C = C,
-            .config = optional_config.value_or(LaunchConfig{
-                    .grid_dim = dim3{static_cast<unsigned int>((a.dim().i + default_tile_size - 1)
-                                             / default_tile_size),
-                            static_cast<unsigned int>(
-                                    (b.dim().j + default_tile_size - 1) / default_tile_size)},
-                    .block_dim = dim3{static_cast<unsigned int>(default_tile_size),
-                            static_cast<unsigned int>(default_tile_size)},
-                    .tile_size = default_tile_size})};
+            .config = optional_config.value_or(default_launch_config)};
 }
 
 struct MultiplyResult {
@@ -112,15 +113,7 @@ std::vector<LaunchConfig> generate_launch_configs(int dim_of_square_matrix) {
         const auto blocks = dim_of_square_matrix / tile_size;
         const auto grid = dim3(blocks, blocks);
         const auto block = dim3(tile_size, tile_size);
-        configs.push_back({grid, block, tile_size});
-    }
-    for (const auto bx : {1U, 8U, 16U, 32U}) {
-        for (const auto by : {1U, 8U, 16U, 32U}) {
-            const auto grid = dim3(dim_of_square_matrix / bx, dim_of_square_matrix / by);
-            const auto block = dim3(bx, by);
-            const auto tile_size = static_cast<unsigned int>((bx + by) / 2);
-            configs.push_back({grid, block, tile_size});
-        }
+        configs.push_back({grid, block});
     }
     return configs;
 }
@@ -141,7 +134,7 @@ void correctness_test(const unsigned int rows_left,
     }
 }
 
-void comparative_speed_test(const unsigned int dim_of_square_matrix) {
+void comparative_speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& config) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
 
@@ -159,7 +152,7 @@ void comparative_speed_test(const unsigned int dim_of_square_matrix) {
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
-    const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
+    const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
     std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
 
     EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
@@ -178,22 +171,25 @@ void many_config_speed_test(const unsigned int dim_of_square_matrix) {
     }
 }
 
+constexpr auto test_config =
+        LaunchConfig{.grid_dim = dim3{1U, 1U, 1U}, .block_dim = dim3{11U, 11U, 1U}};
+
 }// namespace
 
 TEST(SpeedTest, SevenElements) {
-    comparative_speed_test(7U);
+    comparative_speed_test(7U, test_config);
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    comparative_speed_test(33U);
+    comparative_speed_test(33U, test_config);
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    comparative_speed_test(1U << 10U);
+    comparative_speed_test(1U << 10U, test_config);
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    comparative_speed_test(1U << 7U);
+    comparative_speed_test(1U << 7U, test_config);
 }
 
 TEST(ManyConfigSpeedTest, OneMillionElements) {

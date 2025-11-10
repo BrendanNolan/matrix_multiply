@@ -12,8 +12,8 @@ __global__ void tiled_multiply(const float* A,
     const auto T = blockDim.x;
     extern __shared__ float shared[];
     float* a_tile = shared;
-    float* b_tile = shared + T * T;
-    float* c_tile = shared + 2 * T * T;
+    float* b_tile = a_tile + T * T;
+    float* c_tile = b_tile + T * T;
     for (auto x = 0U; x < ai; x += gridDim.x * blockDim.x) {
         for (auto y = 0U; y < bj; y += gridDim.y * blockDim.y) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;

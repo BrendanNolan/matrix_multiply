@@ -11,7 +11,6 @@ target_link_libraries(lin_alg_tests
         lin_alg
         cuda_lin_alg
         GTest::gtest
-        GTest::gtest_main
 )
 
 target_include_directories(lin_alg_tests

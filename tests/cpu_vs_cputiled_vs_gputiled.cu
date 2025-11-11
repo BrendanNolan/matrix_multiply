@@ -1,5 +1,6 @@
 #include "gpu_matrix.cuh"
 #include "matrix.hpp"
+#include "test_config.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -17,6 +18,9 @@ struct LaunchConfig {
 unsigned int tile_size(const LaunchConfig& config) {
     assert(config.block_dim.x == config.block_dim.y);
     return config.block_dim.x * config.block_dim.x;
+}
+unsigned int shared_mem_size(const LaunchConfig& config) {
+    return tile_size(config) * 3U * sizeof(float);
 }
 
 std::string to_string(const dim3& dim) {
@@ -41,12 +45,12 @@ struct CudaInput {
 };
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
-    const auto shared_mem_size = static_cast<unsigned int>(tile_size(input.config) * 3U);
-    std::cout << "shared_mem_size: " << shared_mem_size << std::endl;
+    std::cout << "shared_mem_size: " << shared_mem_size(input.config) << std::endl;
     const auto start = std::chrono::high_resolution_clock::now();
-    cuda_lin_alg::
-            tiled_multiply<<<input.config.grid_dim, input.config.block_dim, shared_mem_size>>>(
-                    input.A, input.ai, input.aj, input.B, input.bj, input.C);
+    cuda_lin_alg::tiled_multiply<<<input.config.grid_dim,
+            input.config.block_dim,
+            shared_mem_size(input.config)>>>(
+            input.A, input.ai, input.aj, input.B, input.bj, input.C);
     cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -171,25 +175,30 @@ void many_config_speed_test(const unsigned int dim_of_square_matrix) {
     }
 }
 
-constexpr auto test_config =
-        LaunchConfig{.grid_dim = dim3{1U, 1U, 1U}, .block_dim = dim3{11U, 11U, 1U}};
+LaunchConfig get_test_config() {
+    return LaunchConfig{
+            .grid_dim =
+                    dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U},
+            .block_dim =
+                    dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U}};
+}
 
 }// namespace
 
 TEST(SpeedTest, SevenElements) {
-    comparative_speed_test(7U, test_config);
+    comparative_speed_test(7U, get_test_config());
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    comparative_speed_test(33U, test_config);
+    comparative_speed_test(33U, get_test_config());
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    comparative_speed_test(1U << 10U, test_config);
+    comparative_speed_test(1U << 10U, get_test_config());
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    comparative_speed_test(1U << 7U, test_config);
+    comparative_speed_test(1U << 7U, get_test_config());
 }
 
 TEST(ManyConfigSpeedTest, OneMillionElements) {

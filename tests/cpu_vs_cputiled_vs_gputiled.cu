@@ -87,7 +87,6 @@ struct CudaInput {
 };
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
-    std::cout << "shared_mem_size: " << shared_mem_size(input.config) << std::endl;
     const auto start = std::chrono::high_resolution_clock::now();
     cuda_lin_alg::tiled_multiply<<<input.config.grid_dim(),
             input.config.block_dim(),

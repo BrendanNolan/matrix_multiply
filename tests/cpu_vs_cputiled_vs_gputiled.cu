@@ -2,6 +2,7 @@
 #include "matrix.hpp"
 #include "test_config.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -207,8 +208,10 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& spe
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
     const auto configs = [&specific_config] {
-        auto configs = generate_launch_configs();
-        configs.push_back(specific_config);
+        auto configs = std::vector<LaunchConfig>{specific_config};
+        const auto generated_configs = generate_launch_configs();
+        std::copy(
+                generated_configs.cbegin(), generated_configs.cend(), std::back_inserter(configs));
         return configs;
     }();
     for (const auto& config : configs) {

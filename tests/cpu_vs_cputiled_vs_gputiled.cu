@@ -2,22 +2,63 @@
 #include "matrix.hpp"
 #include "test_config.hpp"
 
+#include <cassert>
 #include <chrono>
-#include <cmath>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 #include <vector>
+
+#include <cuda_runtime.h>
 
 #include <gtest/gtest.h>
 
 namespace {
 
-struct LaunchConfig {
-    dim3 grid_dim;
-    dim3 block_dim;
+class LaunchConfig {
+ public:
+    static std::optional<LaunchConfig> create(const dim3& grid_dim, const dim3& block_dim) {
+        auto config = LaunchConfig{};
+        config.grid_dim_ = grid_dim;
+        config.block_dim_ = block_dim;
+        if (!config.is_legal()) {
+            return std::nullopt;
+        }
+        return config;
+    }
+    const dim3& grid_dim() const {
+        return grid_dim_;
+    }
+    const dim3& block_dim() const {
+        return block_dim_;
+    }
+ private:
+    LaunchConfig() = default;
+    bool is_legal() const {
+        auto properties = cudaDeviceProp{};
+        cudaGetDeviceProperties(&properties, 0);
+        if (block_dim_.x * block_dim_.y * block_dim_.z
+                > static_cast<unsigned int>(properties.maxThreadsPerBlock)) {
+            return false;
+        }
+        if (block_dim_.x > static_cast<unsigned int>(properties.maxThreadsDim[0])
+                || block_dim_.y > static_cast<unsigned int>(properties.maxThreadsDim[1])
+                || block_dim_.z > static_cast<unsigned int>(properties.maxThreadsDim[2])) {
+            return false;
+        }
+        if (grid_dim_.x > static_cast<unsigned int>(properties.maxGridSize[0])
+                || grid_dim_.y > static_cast<unsigned int>(properties.maxGridSize[1])
+                || grid_dim_.z > static_cast<unsigned int>(properties.maxGridSize[2])) {
+            return false;
+        }
+        return true;
+    }
+    dim3 grid_dim_;
+    dim3 block_dim_;
 };
 unsigned int tile_size(const LaunchConfig& config) {
-    assert(config.block_dim.x == config.block_dim.y);
-    return config.block_dim.x * config.block_dim.x;
+    assert(config.block_dim().x == config.block_dim().y);
+    return config.block_dim().x * config.block_dim().x;
 }
 unsigned int shared_mem_size(const LaunchConfig& config) {
     return tile_size(config) * 3U * sizeof(float);
@@ -29,7 +70,8 @@ std::string to_string(const dim3& dim) {
 }
 
 std::string to_string(const LaunchConfig& config) {
-    return "gridDim: " + to_string(config.grid_dim) + " blockDim: " + to_string(config.block_dim);
+    return "gridDim: " + to_string(config.grid_dim())
+            + " blockDim: " + to_string(config.block_dim());
 }
 
 using Dim = lin_alg::Dimension;
@@ -47,8 +89,8 @@ struct CudaInput {
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     std::cout << "shared_mem_size: " << shared_mem_size(input.config) << std::endl;
     const auto start = std::chrono::high_resolution_clock::now();
-    cuda_lin_alg::tiled_multiply<<<input.config.grid_dim,
-            input.config.block_dim,
+    cuda_lin_alg::tiled_multiply<<<input.config.grid_dim(),
+            input.config.block_dim(),
             shared_mem_size(input.config)>>>(
             input.A, input.ai, input.aj, input.B, input.bj, input.C);
     cudaDeviceSynchronize();
@@ -71,12 +113,13 @@ CudaInput ExtractInput(const lin_alg::Matrix& a,
     float* C;
     cudaMalloc(&C, c_bytes);
     const auto default_block_edge_size = 4U;
-    const auto default_launch_config = LaunchConfig{
-            .grid_dim = dim3{static_cast<unsigned int>((a.dim().i + default_block_edge_size - 1)
-                                     / default_block_edge_size),
+    const auto default_launch_config = LaunchConfig::create(
+            dim3{static_cast<unsigned int>(
+                         (a.dim().i + default_block_edge_size - 1) / default_block_edge_size),
                     static_cast<unsigned int>(
                             (b.dim().j + default_block_edge_size - 1) / default_block_edge_size)},
-            .block_dim = dim3{default_block_edge_size, default_block_edge_size}};
+            dim3{default_block_edge_size, default_block_edge_size})
+                                               .value();
     return CudaInput{.A = A,
             .ai = a.dim().i,
             .aj = a.dim().j,
@@ -110,14 +153,19 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
             .launch_config_used = input.config};
 }
 
-std::vector<LaunchConfig> generate_launch_configs(int dim_of_square_matrix) {
+std::vector<LaunchConfig> generate_launch_configs() {
     auto configs = std::vector<LaunchConfig>{};
-    const auto tile_sizes = std::vector<unsigned int>{1U, 8U, 16U, 32U};
-    for (const auto tile_size : tile_sizes) {
-        const auto blocks = dim_of_square_matrix / tile_size;
-        const auto grid = dim3(blocks, blocks);
-        const auto block = dim3(tile_size, tile_size);
-        configs.push_back({grid, block});
+    const auto sizes = std::vector<unsigned int>{1U, 8U, 16U, 32U, 64U, 128U, 256U};
+    for (const auto grid_edge : sizes) {
+        for (const auto block_edge : sizes) {
+            const auto grid_dim = dim3(grid_edge, grid_edge);
+            const auto block_dim = dim3(block_edge, block_edge);
+            const auto config = LaunchConfig::create(grid_dim, block_dim);
+            if (!config) {
+                continue;
+            }
+            configs.push_back(config.value());
+        }
     }
     return configs;
 }
@@ -131,7 +179,7 @@ void correctness_test(const unsigned int rows_left,
     const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
     std::cout << "Used config " << to_string(cuda_multiply_result.launch_config_used) << std::endl;
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
-    for (const auto& config : generate_launch_configs(common)) {
+    for (const auto& config : generate_launch_configs()) {
         std::cout << "Using config: " << to_string(config) << std::endl;
         const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
         EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
@@ -166,7 +214,7 @@ void comparative_speed_test(const unsigned int dim_of_square_matrix, const Launc
 void many_config_speed_test(const unsigned int dim_of_square_matrix) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
-    for (const auto& config : generate_launch_configs(dim_of_square_matrix)) {
+    for (const auto& config : generate_launch_configs()) {
         const auto input = ExtractInput(a, b, config);
         const auto duration = raw_cuda_multiply(input);
         std::cout << "With " << dim_of_square_matrix << "-square matrices and config "
@@ -176,11 +224,13 @@ void many_config_speed_test(const unsigned int dim_of_square_matrix) {
 }
 
 LaunchConfig get_test_config() {
-    return LaunchConfig{
-            .grid_dim =
-                    dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U},
-            .block_dim =
-                    dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U}};
+    const auto config = LaunchConfig::create(
+            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U},
+            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U});
+    if (!config) {
+        throw std::invalid_argument{"Invalid Launch Configuration"};
+    }
+    return config.value();
 }
 
 }// namespace
@@ -196,7 +246,7 @@ TEST(SpeedTest, ThirtyThreeElements) {
 TEST(SpeedTest, OneMillionElements) {
     const auto square_dim = 1U << 10U;
     comparative_speed_test(square_dim, get_test_config());
-    for (const auto& config : generate_launch_configs(square_dim)) {
+    for (const auto& config : generate_launch_configs()) {
         comparative_speed_test(square_dim, config);
     }
 }

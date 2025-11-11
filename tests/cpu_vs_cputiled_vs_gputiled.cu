@@ -32,6 +32,9 @@ class LaunchConfig {
     const dim3& block_dim() const {
         return block_dim_;
     }
+    unsigned int shared_mem_per_block() const {
+        return tile_size() * 3U * sizeof(float);
+    }
  private:
     LaunchConfig() = default;
     bool is_legal() const {
@@ -51,18 +54,18 @@ class LaunchConfig {
                 || grid_dim_.z > static_cast<unsigned int>(properties.maxGridSize[2])) {
             return false;
         }
+        if (shared_mem_per_block() > static_cast<unsigned int>(properties.sharedMemPerBlock)) {
+            return false;
+        }
         return true;
+    }
+    unsigned int tile_size() const {
+        assert(block_dim().x == block_dim().y);
+        return block_dim().x * block_dim().x;
     }
     dim3 grid_dim_;
     dim3 block_dim_;
 };
-unsigned int tile_size(const LaunchConfig& config) {
-    assert(config.block_dim().x == config.block_dim().y);
-    return config.block_dim().x * config.block_dim().x;
-}
-unsigned int shared_mem_size(const LaunchConfig& config) {
-    return tile_size(config) * 3U * sizeof(float);
-}
 
 std::string to_string(const dim3& dim) {
     return "(" + std::to_string(dim.x) + "," + std::to_string(dim.y) + "," + std::to_string(dim.z)
@@ -90,7 +93,7 @@ std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
     cuda_lin_alg::tiled_multiply<<<input.config.grid_dim(),
             input.config.block_dim(),
-            shared_mem_size(input.config)>>>(
+            input.config.shared_mem_per_block()>>>(
             input.A, input.ai, input.aj, input.B, input.bj, input.C);
     cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();

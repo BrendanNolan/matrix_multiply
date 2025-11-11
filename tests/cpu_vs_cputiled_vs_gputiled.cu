@@ -194,7 +194,11 @@ TEST(SpeedTest, ThirtyThreeElements) {
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    comparative_speed_test(1U << 10U, get_test_config());
+    const auto square_dim = 1U << 10U;
+    comparative_speed_test(square_dim, get_test_config());
+    for (const auto& config : generate_launch_configs(square_dim)) {
+        comparative_speed_test(square_dim, config);
+    }
 }
 
 TEST(SpeedTest, OneThousandElements) {

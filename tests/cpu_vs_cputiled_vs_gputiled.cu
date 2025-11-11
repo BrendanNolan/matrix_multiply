@@ -155,7 +155,7 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
 
 std::vector<LaunchConfig> generate_launch_configs() {
     auto configs = std::vector<LaunchConfig>{};
-    const auto sizes = std::vector<unsigned int>{1U, 8U, 16U, 32U, 64U, 128U, 256U};
+    const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 1U};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
             const auto grid_dim = dim3(grid_edge, grid_edge);
@@ -186,7 +186,7 @@ void correctness_test(const unsigned int rows_left,
     }
 }
 
-void comparative_speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& config) {
+void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& specific_config) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
 
@@ -204,22 +204,16 @@ void comparative_speed_test(const unsigned int dim_of_square_matrix, const Launc
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
-    const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
-    std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
-
-    EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
-    EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
-}
-
-void many_config_speed_test(const unsigned int dim_of_square_matrix) {
-    const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
-    const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
-    for (const auto& config : generate_launch_configs()) {
-        const auto input = ExtractInput(a, b, config);
-        const auto duration = raw_cuda_multiply(input);
-        std::cout << "With " << dim_of_square_matrix << "-square matrices and config "
-                  << to_string(config) << ", CUDA execution took " << duration.count() << " ms"
-                  << std::endl;
+    const auto configs = [&specific_config] {
+        auto configs = generate_launch_configs();
+        configs.push_back(specific_config);
+        return configs;
+    }();
+    for (const auto& config : configs) {
+        const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
+        std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
+        EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
+        EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
     }
 }
 
@@ -236,31 +230,19 @@ LaunchConfig get_test_config() {
 }// namespace
 
 TEST(SpeedTest, SevenElements) {
-    comparative_speed_test(7U, get_test_config());
+    speed_test(7U, get_test_config());
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    comparative_speed_test(33U, get_test_config());
+    speed_test(33U, get_test_config());
 }
 
 TEST(SpeedTest, OneMillionElements) {
-    const auto square_dim = 1U << 10U;
-    comparative_speed_test(square_dim, get_test_config());
-    for (const auto& config : generate_launch_configs()) {
-        comparative_speed_test(square_dim, config);
-    }
+    speed_test(1U << 10U, get_test_config());
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    comparative_speed_test(1U << 7U, get_test_config());
-}
-
-TEST(ManyConfigSpeedTest, OneMillionElements) {
-    many_config_speed_test(1U << 10U);
-}
-
-TEST(ManyConfigSpeedTest, OneThousandElements) {
-    many_config_speed_test(1U << 7U);
+    speed_test(1U << 7U, get_test_config());
 }
 
 TEST(CorrectnessTest, Small) {

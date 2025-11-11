@@ -263,3 +263,17 @@ TEST(CorrectnessTest, Large) {
     const auto columns_right = (1U << 6) + 1U;
     correctness_test(rows_left, common, columns_right);
 }
+
+TEST(PrintGpuStats, Basic) {
+    auto prop = cudaDeviceProp{};
+    cudaGetDeviceProperties(&prop, 0);
+    const auto threads_per_block = prop.maxThreadsPerBlock;
+    const auto threads_per_sm = prop.maxThreadsPerMultiProcessor;
+    const auto total_sms = prop.multiProcessorCount;
+    const auto max_concurrent_threads = threads_per_sm * total_sms;
+    printf("GPU: %s\n", prop.name);
+    printf("SM Count: %d\n", total_sms);
+    printf("Max Threads Per SM: %d\n", threads_per_sm);
+    printf("Max Threads Per Block: %d\n", threads_per_block);
+    printf("Maximum Concurrent Threads: %d\n", max_concurrent_threads);
+}

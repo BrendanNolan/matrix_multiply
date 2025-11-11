@@ -156,8 +156,18 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
             .launch_config_used = input.config};
 }
 
+LaunchConfig get_test_config() {
+    const auto config = LaunchConfig::create(
+            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U},
+            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U});
+    if (!config) {
+        throw std::invalid_argument{"Invalid Launch Configuration"};
+    }
+    return config.value();
+}
+
 std::vector<LaunchConfig> generate_launch_configs() {
-    auto configs = std::vector<LaunchConfig>{};
+    auto configs = std::vector<LaunchConfig>{get_test_config()};
     const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 1U};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
@@ -180,16 +190,14 @@ void correctness_test(const unsigned int rows_left,
     const auto b = lin_alg::Matrix::random(Dim{common, columns_right});
     const auto naive_multiply_result = lin_alg::naive_multiply(a, b);
     const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
-    std::cout << "Used config " << to_string(cuda_multiply_result.launch_config_used) << std::endl;
     EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
     for (const auto& config : generate_launch_configs()) {
-        std::cout << "Using config: " << to_string(config) << std::endl;
-        const auto cuda_multiply_result = cuda_tiled_multiply(a, b);
+        const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
         EXPECT_EQ(cuda_multiply_result.result_matrix, naive_multiply_result);
     }
 }
 
-void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& specific_config) {
+void speed_test(const unsigned int dim_of_square_matrix) {
     const auto a = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
     const auto b = lin_alg::Matrix::random(Dim{dim_of_square_matrix, dim_of_square_matrix});
 
@@ -207,14 +215,7 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& spe
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "Optimised CPU execution time: " << optimised_cpu_time << " ms" << std::endl;
 
-    const auto configs = [&specific_config] {
-        auto configs = std::vector<LaunchConfig>{specific_config};
-        const auto generated_configs = generate_launch_configs();
-        std::copy(
-                generated_configs.cbegin(), generated_configs.cend(), std::back_inserter(configs));
-        return configs;
-    }();
-    for (const auto& config : configs) {
+    for (const auto& config : generate_launch_configs()) {
         const auto cuda_multiply_result = cuda_tiled_multiply(a, b, config);
         std::cout << "Optimised GPU execution " << to_string(cuda_multiply_result) << std::endl;
         EXPECT_EQ(tiled_multiply_result, naive_multiply_result);
@@ -222,32 +223,22 @@ void speed_test(const unsigned int dim_of_square_matrix, const LaunchConfig& spe
     }
 }
 
-LaunchConfig get_test_config() {
-    const auto config = LaunchConfig::create(
-            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U},
-            dim3{TestConfig::instance().block_edge, TestConfig::instance().block_edge, 1U});
-    if (!config) {
-        throw std::invalid_argument{"Invalid Launch Configuration"};
-    }
-    return config.value();
-}
-
 }// namespace
 
 TEST(SpeedTest, SevenElements) {
-    speed_test(7U, get_test_config());
+    speed_test(7U);
 }
 
 TEST(SpeedTest, ThirtyThreeElements) {
-    speed_test(33U, get_test_config());
-}
-
-TEST(SpeedTest, OneMillionElements) {
-    speed_test(1U << 10U, get_test_config());
+    speed_test(33U);
 }
 
 TEST(SpeedTest, OneThousandElements) {
-    speed_test(1U << 7U, get_test_config());
+    speed_test(1U << 7U);
+}
+
+TEST(SpeedTest, OneMillionElements) {
+    speed_test(1U << 10U);
 }
 
 TEST(CorrectnessTest, Small) {

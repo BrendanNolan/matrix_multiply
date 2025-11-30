@@ -2,30 +2,30 @@
 
 #include "gpu_matrix.h"
 
-void launch_tiled_multiply(const double* A,
+void launch_tiled_multiply(const float* A,
         const unsigned int ai,
         const unsigned int aj,
-        const double* B,
+        const float* B,
         const unsigned int bj,
-        double* C,
+        float* C,
         const dim3& grid,
         const dim3& block,
         const unsigned int shared_mem_size) {
     tiled_multiply<<<grid, block, shared_mem_size>>>(A, ai, aj, B, bj, C);
 }
 
-__global__ void tiled_multiply(const double* A,
+__global__ void tiled_multiply(const float* A,
         const unsigned int ai,
         const unsigned int aj,
-        const double* B,
+        const float* B,
         const unsigned int bj,
-        double* C) {
+        float* C) {
     assert(blockDim.x == blockDim.y);
     const auto T = blockDim.x;
-    extern __shared__ double shared[];
-    double* a_tile = shared;
-    double* b_tile = a_tile + T * T;
-    double* c_tile = b_tile + T * T;
+    extern __shared__ float shared[];
+    float* a_tile = shared;
+    float* b_tile = a_tile + T * T;
+    float* c_tile = b_tile + T * T;
     for (auto x = 0U; x < ai; x += gridDim.x * blockDim.x) {
         for (auto y = 0U; y < bj; y += gridDim.y * blockDim.y) {
             const auto g_i = x + blockIdx.x * blockDim.x + threadIdx.x;

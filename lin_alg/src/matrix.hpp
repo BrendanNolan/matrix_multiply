@@ -17,19 +17,19 @@ std::string display(const Dimension& dim);
 class Matrix {
  public:
     static Matrix zeroes(const Dimension& dim);
-    static Matrix all_same(double entry, const Dimension& dim);
+    static Matrix all_same(float entry, const Dimension& dim);
     static Matrix random(const Dimension& dim);
-    static Matrix from_raw(double* entries, const Dimension& dim);
+    static Matrix from_raw(float* entries, const Dimension& dim);
     ~Matrix();
     Dimension dim() const;
-    double operator()(unsigned int i, unsigned int j) const;
-    double& operator()(unsigned int i, unsigned int j);
+    float operator()(unsigned int i, unsigned int j) const;
+    float& operator()(unsigned int i, unsigned int j);
     bool operator==(const Matrix& other) const;
-    const double* raw() const;
+    const float* raw() const;
  private:
-    Matrix(double* entries, const Dimension& dim);
+    Matrix(float* entries, const Dimension& dim);
  private:
-    double* data_ = nullptr;
+    float* data_ = nullptr;
     Dimension dim_;
 };
 

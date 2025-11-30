@@ -18,12 +18,12 @@ bool Dimension::operator!=(const Dimension& other) const {
     return !(*this == other);
 }
 
-Matrix::Matrix(double* impl, const Dimension& dim)
+Matrix::Matrix(float* impl, const Dimension& dim)
     : data_{impl}
     , dim_{dim} {
 }
 
-Matrix Matrix::from_raw(double* impl, const Dimension& dim) {
+Matrix Matrix::from_raw(float* impl, const Dimension& dim) {
     return Matrix{impl, dim};
 }
 
@@ -32,22 +32,22 @@ Matrix::~Matrix() {
 }
 
 Matrix Matrix::zeroes(const Dimension& dim) {
-    return Matrix{static_cast<double*>(calloc(dim.i * dim.j, sizeof(double))), dim};
+    return Matrix{static_cast<float*>(calloc(dim.i * dim.j, sizeof(float))), dim};
 }
 
-Matrix Matrix::all_same(double entry, const Dimension& dim) {
-    auto* entries = static_cast<double*>(malloc(dim.i * dim.j * sizeof(double)));
+Matrix Matrix::all_same(float entry, const Dimension& dim) {
+    auto* entries = static_cast<float*>(malloc(dim.i * dim.j * sizeof(float)));
     for (auto index = 0U; index < dim.i * dim.j; ++index) {
         entries[index] = entry;
     }
     return Matrix{entries, dim};
 }
 
-double Matrix::operator()(const unsigned int i, const unsigned int j) const {
+float Matrix::operator()(const unsigned int i, const unsigned int j) const {
     return data_[i * dim_.j + j];
 }
 
-double& Matrix::operator()(const unsigned int i, const unsigned int j) {
+float& Matrix::operator()(const unsigned int i, const unsigned int j) {
     return data_[i * dim_.j + j];
 }
 
@@ -81,7 +81,7 @@ bool Matrix::operator==(const Matrix& other) const {
     return true;
 }
 
-const double* Matrix::raw() const {
+const float* Matrix::raw() const {
     return data_;
 }
 

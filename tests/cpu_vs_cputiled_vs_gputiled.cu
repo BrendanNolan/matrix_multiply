@@ -1,4 +1,4 @@
-#include "gpu_matrix.cuh"
+#include "gpu_matrix.h"
 #include "matrix.hpp"
 #include "test_config.hpp"
 
@@ -92,10 +92,9 @@ struct CudaInput {
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
-    cuda_lin_alg::tiled_multiply<<<input.config.grid_dim(),
-            input.config.block_dim(),
-            input.config.shared_mem_per_block()>>>(
-            input.A, input.ai, input.aj, input.B, input.bj, input.C);
+    launch_tiled_multiply(
+            input.A, input.ai, input.aj, input.B, input.bj, input.C, input.config.grid_dim(),
+            input.config.block_dim(), input.config.shared_mem_per_block());
     cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

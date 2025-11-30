@@ -6,6 +6,7 @@ set_source_files_properties(${TEST_SOURCES} PROPERTIES LANGUAGE CUDA)
 add_compile_options(-Wall -Wextra)
 add_executable(lin_alg_tests ${TEST_SOURCES})
 
+set(CMAKE_BUILD_RPATH_USE_ORIGIN ON) # Ensure that the tests find libcuda_lin_alg.so at runtime
 target_link_libraries(lin_alg_tests
     PRIVATE
         lin_alg

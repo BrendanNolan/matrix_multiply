@@ -34,7 +34,7 @@ class LaunchConfig {
         return block_dim_;
     }
     unsigned int shared_mem_per_block() const {
-        return tile_size() * 3U * sizeof(float);
+        return tile_size() * 3U * sizeof(double);
     }
  private:
     LaunchConfig() = default;
@@ -81,20 +81,26 @@ std::string to_string(const LaunchConfig& config) {
 using Dim = lin_alg::Dimension;
 
 struct CudaInput {
-    const float* A = nullptr;
+    const double* A = nullptr;
     const unsigned int ai = 0U;
     const unsigned int aj = 0U;
-    const float* B = nullptr;
+    const double* B = nullptr;
     const unsigned int bj = 0U;
-    float* C = nullptr;
+    double* C = nullptr;
     LaunchConfig config;
 };
 
 std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
     const auto start = std::chrono::high_resolution_clock::now();
-    launch_tiled_multiply(
-            input.A, input.ai, input.aj, input.B, input.bj, input.C, input.config.grid_dim(),
-            input.config.block_dim(), input.config.shared_mem_per_block());
+    launch_tiled_multiply(input.A,
+            input.ai,
+            input.aj,
+            input.B,
+            input.bj,
+            input.C,
+            input.config.grid_dim(),
+            input.config.block_dim(),
+            input.config.shared_mem_per_block());
     cudaDeviceSynchronize();
     const auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -103,16 +109,16 @@ std::chrono::milliseconds raw_cuda_multiply(const CudaInput& input) {
 CudaInput ExtractInput(const lin_alg::Matrix& a,
         const lin_alg::Matrix& b,
         const std::optional<LaunchConfig>& optional_config) {
-    const auto a_bytes = raw_size(a) * sizeof(float);
-    float* A;
+    const auto a_bytes = raw_size(a) * sizeof(double);
+    double* A;
     cudaMalloc(&A, a_bytes);
     cudaMemcpy(A, a.raw(), a_bytes, cudaMemcpyHostToDevice);
-    const auto b_bytes = raw_size(b) * sizeof(float);
-    float* B;
+    const auto b_bytes = raw_size(b) * sizeof(double);
+    double* B;
     cudaMalloc(&B, b_bytes);
     cudaMemcpy(B, b.raw(), b_bytes, cudaMemcpyHostToDevice);
-    const auto c_bytes = a.dim().i * b.dim().j * sizeof(float);
-    float* C;
+    const auto c_bytes = a.dim().i * b.dim().j * sizeof(double);
+    double* C;
     cudaMalloc(&C, c_bytes);
     const auto default_block_edge_size = 4U;
     const auto default_launch_config = LaunchConfig::create(
@@ -146,8 +152,8 @@ MultiplyResult cuda_tiled_multiply(const lin_alg::Matrix& a,
         const std::optional<LaunchConfig>& optional_config = std::nullopt) {
     const auto input = ExtractInput(a, b, optional_config);
     const auto duration_ms = raw_cuda_multiply(input);
-    const auto c_bytes = input.ai * input.bj * sizeof(float);
-    float* h_C = static_cast<float*>(malloc(c_bytes));
+    const auto c_bytes = input.ai * input.bj * sizeof(double);
+    double* h_C = static_cast<double*>(malloc(c_bytes));
     cudaMemcpy(h_C, input.C, c_bytes, cudaMemcpyDeviceToHost);
     return MultiplyResult{.result_matrix = lin_alg::Matrix::from_raw(
                                   h_C, lin_alg::Dimension{a.dim().i, b.dim().j}),

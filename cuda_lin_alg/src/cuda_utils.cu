@@ -2,15 +2,16 @@
 
 #include <cuda_runtime.h>
 
-float* allocate_on_cuda(const float* host_array, const size_t count) {
-    float* device_memory;
-    cudaMalloc(&device_memory, count);
-    cudaMemcpy(device_memory, host_array, count, cudaMemcpyHostToDevice);
-    return device_memory;
+float* allocate_on_device(const size_t count) {
+    float* device_array;
+    cudaMalloc(&device_array, count);
+    return device_array;
 }
 
-float* transfer_from_cuda(const float* device_array, const size_t count) {
-    auto* host_memory = static_cast<float*>(malloc(sizeof(float) * count));
-    cudaMemcpy(host_memory, device_array, count, cudaMemcpyDeviceToHost);
-    return host_memory;
+void copy_to_device(const float* host_array, size_t count, float* device_array) {
+    cudaMemcpy(device_array, host_array, count * sizeof(float), cudaMemcpyHostToDevice);
+}
+
+void copy_from_device(const float* device_array, const size_t count, float* host_array) {
+    cudaMemcpy(host_array, device_array, count, cudaMemcpyDeviceToHost);
 }

@@ -176,6 +176,9 @@ std::vector<LaunchConfig> generate_launch_configs() {
     const auto sizes = std::vector<unsigned int>{256U, 128U, 64U, 32U, 16U, 8U, 1U};
     for (const auto grid_edge : sizes) {
         for (const auto block_edge : sizes) {
+            if (grid_edge == 1U && block_edge == 1U) {
+                continue;
+            }
             const auto grid_dim = dim3(grid_edge, grid_edge);
             const auto block_dim = dim3(block_edge, block_edge);
             const auto config = LaunchConfig::create(grid_dim, block_dim);
